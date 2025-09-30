@@ -1,5 +1,3 @@
 package larkbase
 
-type Meta struct {
-	Id string
-}
+type Meta struct{}

@@ -21,19 +21,14 @@ type Demo struct {
 }
 
 func main() {
-	client := larkbase.NewClient(os.Getenv("LARK_APP_ID"), os.Getenv("LARK_APP_SECRET"))
-	demo := Demo{}
-	demoConn, err := client.Connect(&demo)
+	demo := &Demo{}
+	conn, err := larkbase.Connect(os.Getenv("LARK_APP_ID"), os.Getenv("LARK_APP_SECRET"), demo)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(demoConn.TableName(), demoConn.TableId())
-	for _, field := range demoConn.TableFields() {
-		fmt.Println(field.Name, field.Type)
-	}
 
-	count, err := demoConn.CountRecords()
+	count, err := conn.CountRecords()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -41,7 +36,7 @@ func main() {
 	fmt.Println(count)
 
 	var records []Demo
-	err = demoConn.Where(demo.Name.FilterIs("andy")).QueryRecords(&records)
+	err = conn.QueryRecords(&records, demo.Name.FilterIs("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -53,7 +48,7 @@ func main() {
 	}
 	fmt.Println(s)
 
-	err = demoConn.Where(demo.Name.FilterIsNot("andy")).QueryRecords(&records)
+	err = conn.QueryRecords(&records, demo.Name.FilterIsNot("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
