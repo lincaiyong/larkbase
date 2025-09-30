@@ -18,29 +18,9 @@ func NewClient(appId, appSecret string) *Client {
 type Client struct {
 	*lark.Client
 	appTables map[string]map[string]string // key is app token, table id
-
-	current *ClientContext
 }
 
-type ClientContext struct {
-	appToken string
-	table    *Table
-	error    error
-	filters  []*larkbitable.Condition
-}
-
-func (c *Client) checkCurrent() error {
-	if c.current == nil {
-		return fmt.Errorf("current table is not set")
-	}
-	return c.current.error
-}
-
-func (c *Client) failCurrent(msg string, args ...any) {
-	c.current.error = fmt.Errorf(msg, args...)
-}
-
-func (c *Client) connectApp(appToken string) error {
+func (c *Client) connectLarkApp(appToken string) error {
 	if c.appTables[appToken] != nil {
 		return nil
 	}
@@ -80,28 +60,6 @@ func (c *Client) getAppTablesByPage(appToken, pageToken string) (string, error) 
 	}
 	if *data.HasMore {
 		return *data.PageToken, nil
-	}
-	return "", nil
-}
-
-func (c *Client) getTableRecordByPage(pageToken string, total *int) (string, error) {
-	const pageSize = 100
-	req := larkbitable.NewSearchAppTableRecordReqBuilder().
-		AppToken(c.current.appToken).
-		TableId(c.current.table.id).
-		PageToken(pageToken).
-		PageSize(pageSize).
-		Body(larkbitable.NewSearchAppTableRecordReqBodyBuilder().Build()).Build()
-	resp, err := c.Bitable.V1.AppTableRecord.Search(context.Background(), req)
-	if err != nil {
-		return "", fmt.Errorf("fail to call bitable search table: %v", err)
-	}
-	if !resp.Success() {
-		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
-	}
-	*total += *resp.Data.Total
-	if *resp.Data.HasMore {
-		return *resp.Data.PageToken, nil
 	}
 	return "", nil
 }
