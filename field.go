@@ -91,9 +91,8 @@ func (t FieldType) String() string {
 }
 
 type IField interface {
-	Id() string
 	Name() string
-	IsPrimary() bool
+	SetName(v string)
 	Type() FieldType
 	Value() string
 	SetValue(v any) error
@@ -102,21 +101,15 @@ type IField interface {
 }
 
 type BaseField struct {
-	id        string
-	name      string
-	isPrimary bool
-}
-
-func (f *BaseField) Id() string {
-	return f.id
+	name string
 }
 
 func (f *BaseField) Name() string {
 	return f.name
 }
 
-func (f *BaseField) IsPrimary() bool {
-	return f.isPrimary
+func (f *BaseField) SetName(v string) {
+	f.name = v
 }
 
 func (f *BaseField) Type() FieldType {

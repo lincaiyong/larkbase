@@ -6,7 +6,7 @@ import (
 
 type AutoNumberField struct {
 	BaseField
-	value *int
+	value *string
 }
 
 func (n *AutoNumberField) Type() FieldType {
@@ -17,11 +17,11 @@ func (n *AutoNumberField) Value() string {
 	if n.value == nil {
 		return ""
 	}
-	return fmt.Sprintf("%d", *n.value)
+	return *n.value
 }
 
 func (n *AutoNumberField) SetValue(v any) error {
-	if vv, ok := v.(int); ok {
+	if vv, ok := v.(string); ok {
 		n.value = &vv
 		return nil
 	}
@@ -34,7 +34,7 @@ func (n *AutoNumberField) Build() any {
 
 func (n *AutoNumberField) Parse(v any) IField {
 	ret := &AutoNumberField{BaseField: BaseField{name: n.name}}
-	f := v.(int)
+	f := v.(string)
 	ret.value = &f
 	return ret
 }

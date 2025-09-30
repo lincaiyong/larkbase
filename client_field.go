@@ -6,7 +6,7 @@ import (
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 )
 
-func (c *Client) Fields() (map[string]FieldType, error) {
+func (c *Client) Fields() (map[string]IField, error) {
 	if err := c.checkCurrent(); err != nil {
 		return nil, err
 	}
@@ -42,7 +42,11 @@ func (c *Client) checkFieldsByPage(pageToken string) string {
 	}
 	for _, item := range resp.Data.Items {
 		name := *item.FieldName
-		expectType := c.current.table.fields[name]
+		expectField := c.current.table.fields[name]
+		if expectField == nil {
+			continue
+		}
+		expectType := expectField.Type()
 		if expectType == 0 {
 			continue
 		}

@@ -29,7 +29,9 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(fields)
+	for _, field := range fields {
+		fmt.Println(field.Name(), field.Type().String())
+	}
 
 	count, err := client.Table(Demo{}).Count()
 	if err != nil {
@@ -43,5 +45,10 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(records)
+	for _, record := range records {
+		fmt.Println(record.Id)
+		for _, field := range record.Fields {
+			fmt.Println(field.Name(), field.Type().String(), field.Value())
+		}
+	}
 }

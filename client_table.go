@@ -31,6 +31,19 @@ func (c *Client) Table(table any) *Client {
 }
 
 func (c *Client) realTable(table any) *Client {
+	meta, fields := c.checkTableFields(table)
+	if c.current.error != nil {
+		return c
+	}
+	c.checkConnect(meta, fields)
+	if c.current.error != nil {
+		return c
+	}
+	c.checkFields()
+	return c
+}
+
+func (c *Client) checkTableFields(table any) (string, map[string]IField) {
 	obj := reflect.TypeOf(table)
 	for obj.Kind() == reflect.Ptr {
 		obj = obj.Elem()
@@ -39,7 +52,7 @@ func (c *Client) realTable(table any) *Client {
 		c.failCurrent("invalid argument: %v", table)
 	}
 	meta := ""
-	fields := make(map[string]FieldType)
+	fields := make(map[string]IField)
 	for i := 0; i < obj.NumField(); i++ {
 		field := obj.Field(i)
 		name := field.Name
@@ -51,27 +64,21 @@ func (c *Client) realTable(table any) *Client {
 		}
 		if field.Type.Kind() != reflect.Struct {
 			c.failCurrent("invalid struct field: %s %s", name, type_)
-			return c
+			return "", nil
 		}
-
 		newInstance := reflect.New(field.Type)
-		typeMethod := newInstance.MethodByName("Type")
-		if !typeMethod.IsValid() || typeMethod.Type().NumIn() != 0 {
-			c.failCurrent("invalid struct field: %s %s", name, type_)
-			return c
-		}
-		results := typeMethod.Call(nil)
-		if len(results) == 0 {
-			c.failCurrent("invalid struct field: %s %s", name, type_)
-			return c
-		}
-		t := results[0].Int()
-		fields[tag] = FieldType(t)
+		tableField := newInstance.Interface().(IField)
+		tableField.SetName(tag)
+		fields[tag] = tableField
 	}
 	if meta == "" {
 		c.failCurrent("invalid table: missing Meta, %s", obj.Name())
-		return c
+		return "", nil
 	}
+	return meta, fields
+}
+
+func (c *Client) checkConnect(meta string, fields map[string]IField) *Client {
 	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)`)
 	match := re.FindStringSubmatch(meta)
 	if len(match) != 3 {
@@ -86,13 +93,10 @@ func (c *Client) realTable(table any) *Client {
 		return c
 	}
 	tableName := c.appTables[c.current.appToken][tableId]
-	if table == "" {
+	if tableName == "" {
 		c.failCurrent("fail to find table: %s", tableId)
 		return c
 	}
 	c.current.table = NewTable(tableId, tableName, fields)
-
-	c.checkFields()
-
 	return c
 }

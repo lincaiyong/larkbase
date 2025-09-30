@@ -26,6 +26,7 @@ type ClientContext struct {
 	appToken string
 	table    *Table
 	error    error
+	filters  []*larkbitable.Condition
 }
 
 func (c *Client) checkCurrent() error {
