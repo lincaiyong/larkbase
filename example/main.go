@@ -18,7 +18,8 @@ type Demo struct {
 
 func main() {
 	client := larkbase.NewClient(os.Getenv("LARK_APP_ID"), os.Getenv("LARK_APP_SECRET"))
-	demoConn, err := client.Connect(Demo{})
+	demo := Demo{}
+	demoConn, err := client.Connect(&demo)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -35,7 +36,7 @@ func main() {
 	}
 	fmt.Println(count)
 
-	records, err := demoConn.Where().QueryRecords()
+	records, err := demoConn.Where(demo.Name.Contains("andy")).QueryRecords()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

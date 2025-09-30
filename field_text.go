@@ -2,6 +2,7 @@ package larkbase
 
 import (
 	"fmt"
+	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 )
 
 type TextField struct {
@@ -9,29 +10,29 @@ type TextField struct {
 	value string
 }
 
-func (t *TextField) Type() FieldType {
+func (f *TextField) Type() FieldType {
 	return FieldTypeText
 }
 
-func (t *TextField) Value() string {
-	return t.value
+func (f *TextField) Value() string {
+	return f.value
 }
 
-func (t *TextField) SetValue(v any) error {
+func (f *TextField) SetValue(v any) error {
 	if vv, ok := v.(string); !ok {
 		return fmt.Errorf("value should be string, actual: %v", v)
 	} else {
-		t.value = vv
+		f.value = vv
 		return nil
 	}
 }
 
-func (t *TextField) Build() any {
-	return t.value
+func (f *TextField) Build() any {
+	return f.value
 }
 
-func (t *TextField) Parse(v any) IField {
-	ret := &TextField{BaseField: BaseField{name: t.name}}
+func (f *TextField) Parse(v any) IField {
+	ret := &TextField{BaseField: BaseField{name: f.name}}
 	if v, ok := v.([]any); ok && len(v) == 1 {
 		v2 := v[0]
 		if v3, ok2 := v2.(map[string]any); ok2 {
@@ -39,4 +40,12 @@ func (t *TextField) Parse(v any) IField {
 		}
 	}
 	return ret
+}
+
+func (f *TextField) Contains(v string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().
+		FieldName(f.name).
+		Operator(FilterTypeContains).
+		Value([]string{v}).
+		Build()
 }

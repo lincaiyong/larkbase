@@ -7,43 +7,6 @@ import (
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 )
 
-func (c *Connection) CountRecords() (int, error) {
-	total := 0
-	pageToken := ""
-	for {
-		var err error
-		pageToken, err = c.getTableRecordByPage(pageToken, &total)
-		if err != nil {
-			return 0, err
-		}
-		if pageToken == "" {
-			break
-		}
-	}
-	return total, nil
-}
-
-func (c *Connection) Where(filters ...*larkbitable.Condition) *Connection {
-	c.filters = filters
-	return c
-}
-
-func (c *Connection) QueryRecords() ([]*Record, error) {
-	ret := make([]*Record, 0)
-	pageToken := ""
-	for {
-		var err error
-		ret, pageToken, err = c.queryRecordsByPage(pageToken, ret)
-		if err != nil {
-			return nil, err
-		}
-		if pageToken == "" {
-			break
-		}
-	}
-	return ret, nil
-}
-
 func (c *Connection) queryRecordsByPage(pageToken string, records []*Record) ([]*Record, string, error) {
 	const pageSize = 100
 	bodyBuilder := larkbitable.NewSearchAppTableRecordReqBodyBuilder()
@@ -68,7 +31,6 @@ func (c *Connection) queryRecordsByPage(pageToken string, records []*Record) ([]
 	if !resp.Success() {
 		return nil, "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
-	result := make([]*Record, 0)
 	for _, item := range resp.Data.Items {
 		record := &Record{
 			Id:     *item.RecordId,
@@ -79,15 +41,15 @@ func (c *Connection) queryRecordsByPage(pageToken string, records []*Record) ([]
 			field := f.Parse(fi)
 			record.Fields[name] = field
 		}
-		result = append(result, record)
+		records = append(records, record)
 	}
 	if *resp.Data.HasMore {
-		return result, *resp.Data.PageToken, nil
+		return records, *resp.Data.PageToken, nil
 	}
-	return result, "", nil
+	return records, "", nil
 }
 
-func (c *Connection) getTableRecordByPage(pageToken string, total *int) (string, error) {
+func (c *Connection) queryTableRecordByPage(pageToken string, total *int) (string, error) {
 	const pageSize = 100
 	req := larkbitable.NewSearchAppTableRecordReqBuilder().
 		AppToken(c.appToken).
