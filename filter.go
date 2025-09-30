@@ -3,26 +3,11 @@ package larkbase
 import (
 	"fmt"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
-	"github.com/lincaiyong/log"
+	"time"
 )
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
-
-/*
-is：等于
-isNot：不等于（不支持日期字段，了解如何查询日期字段，参考日期字段填写说明）
-contains：包含（不支持日期字段）
-doesNotContain：不包含（不支持日期字段）
-isEmpty：为空
-isNotEmpty：不为空
-
-isGreater：大于
-isGreaterEqual：大于等于（不支持日期字段）
-isLess：小于
-isLessEqual：小于等于（不支持日期字段）
-like：LIKE 运算符。暂未支持
-in：IN 运算符。暂未支持
-*/
+// https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide#29d9dc89
 
 const FilterTypeIs = "is"
 const FilterTypeIsNot = "isNot"
@@ -34,335 +19,127 @@ const FilterTypeIsGreater = "isGreater"
 const FilterTypeIsGreaterEqual = "isGreaterEqual"
 const FilterTypeIsLess = "isLess"
 const FilterTypeIsLessEqual = "isLessEqual"
-const FilterTypeDateIs = "is"
-const FilterTypeDateIsGreater = "isGreater"
-const FilterTypeDateIsLess = "isLess"
 
-var gFieldFilterMap map[FieldType]map[string]bool
-
-func init() {
-	gFieldFilterMap = make(map[FieldType]map[string]bool)
-	gFieldFilterMap[FieldTypeText] = map[string]bool{
-		FilterTypeIs:             true,
-		FilterTypeIsNot:          true,
-		FilterTypeContains:       true,
-		FilterTypeDoesNotContain: true,
-		FilterTypeIsEmpty:        true,
-		FilterTypeIsNotEmpty:     true,
-	}
-	gFieldFilterMap[FieldTypeNumber] = map[string]bool{
-		FilterTypeIs:             true,
-		FilterTypeIsNot:          true,
-		FilterTypeIsGreater:      true,
-		FilterTypeIsGreaterEqual: true,
-		FilterTypeIsLess:         true,
-		FilterTypeIsLessEqual:    true,
-		FilterTypeIsEmpty:        true,
-		FilterTypeIsNotEmpty:     true,
-	}
-	gFieldFilterMap[FieldTypeSingleSelect] = gFieldFilterMap[FieldTypeText]
-	gFieldFilterMap[FieldTypeMultiSelect] = gFieldFilterMap[FieldTypeText]
-	gFieldFilterMap[FieldTypeDate] = map[string]bool{
-		FilterTypeDateIs:        true,
-		FilterTypeDateIsGreater: true,
-		FilterTypeDateIsLess:    true,
-		FilterTypeIsEmpty:       true,
-		FilterTypeIsNotEmpty:    true,
-	}
-	gFieldFilterMap[FieldTypeCheckbox] = map[string]bool{
-		FilterTypeIs: true,
-	}
-	gFieldFilterMap[FieldTypePerson] = gFieldFilterMap[FieldTypeText]
-	gFieldFilterMap[FieldTypeUrl] = gFieldFilterMap[FieldTypeText]
-	gFieldFilterMap[FieldTypeMedia] = map[string]bool{
-		FilterTypeIsEmpty:    true,
-		FilterTypeIsNotEmpty: true,
-	}
+func filterIs(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{value}).Build()
 }
 
-func FilterIs(field IField, value ...string) *larkbitable.Condition {
-	filterType := FilterTypeIs
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value(value).
-		Build()
+func filterIsNot(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsNot).Value([]string{value}).Build()
 }
 
-func FilterIsNot(field IField, value ...string) *larkbitable.Condition {
-	filterType := FilterTypeIsNot
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value(value).
-		Build()
+func filterContains(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeContains).Value([]string{value}).Build()
 }
 
-func FilterContains(field IField, value ...string) *larkbitable.Condition {
-	filterType := FilterTypeContains
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value(value).
-		Build()
+func filterDoesNotContains(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeDoesNotContain).Value([]string{value}).Build()
 }
 
-func FilterDoesNotContains(field IField, value ...string) *larkbitable.Condition {
-	filterType := FilterTypeDoesNotContain
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value(value).
-		Build()
+func filterIsEmpty(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsEmpty).Value([]string{}).Build()
 }
 
-func FilterIsEmpty(field IField) *larkbitable.Condition {
-	filterType := FilterTypeIsEmpty
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{}).
-		Build()
+func filterIsNotEmpty(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsNotEmpty).Value([]string{}).Build()
 }
 
-func FilterIsNotEmpty(field IField) *larkbitable.Condition {
-	filterType := FilterTypeIsNotEmpty
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{}).
-		Build()
+func filterIsGreater(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreater).Value([]string{value}).Build()
 }
 
-func FilterIsGreater(field IField, value string) *larkbitable.Condition {
-	filterType := FilterTypeIsGreater
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{value}).
-		Build()
+func filterIsGreaterEqual(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreaterEqual).Value([]string{value}).Build()
 }
 
-func FilterIsGreaterEqual(field IField, value string) *larkbitable.Condition {
-	filterType := FilterTypeIsGreaterEqual
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{value}).
-		Build()
+func filterIsLess(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLess).Value([]string{value}).Build()
 }
 
-func FilterIsLess(field IField, value string) *larkbitable.Condition {
-	filterType := FilterTypeIsLess
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{value}).
-		Build()
+func filterIsLessEqual(name, value string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLessEqual).
+		Value([]string{value}).Build()
 }
 
-func FilterIsLessEqual(field IField, value string) *larkbitable.Condition {
-	filterType := FilterTypeIsLessEqual
-	if !gFieldFilterMap[field.Type()][filterType] {
-		log.FatalLog("field type %d doesn't support filter %s", field.Type(), filterType)
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(filterType).
-		Value([]string{value}).
-		Build()
+func filterDateIsToday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"Today"}).Build()
 }
 
-// https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide#29d9dc89
-
-const DateToday = "Today"
-const DateTomorrow = "Tomorrow"
-const DateYesterday = "Yesterday"
-
-func FilterDateIs(field IField, value string) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate {
-		log.FatalLog("expect date field type, actual: %d", field.Type())
-	}
-	if value == DateToday || value == DateTomorrow || value == DateYesterday {
-		return larkbitable.NewConditionBuilder().
-			FieldName(field.Name()).
-			Operator(FilterTypeIs).
-			Value([]string{value}).
-			Build()
-	}
-	us, err := beijingDateTimeStrToUnixSeconds(value)
-	if err != nil {
-		panic(err)
-	}
-	value = fmt.Sprintf("%d", us*1000)
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"ExactDate", value}).
-		Build()
+func filterDateIsTomorrow(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"Tomorrow"}).Build()
 }
 
-func FilterDateIsGreater(field IField, value string) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	if value == DateToday || value == DateTomorrow || value == DateYesterday {
-		return larkbitable.NewConditionBuilder().
-			FieldName(field.Name()).
-			Operator(FilterTypeIsGreater).
-			Value([]string{value}).
-			Build()
-	}
-	us, err := beijingDateTimeStrToUnixSeconds(value)
-	if err != nil {
-		panic(err)
-	}
-	value = fmt.Sprintf("%d", us*1000)
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIsGreater).
-		Value([]string{"ExactDate", value}).
-		Build()
+func filterDateIsYesterday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"Yesterday"}).Build()
 }
 
-func FilterDateIsLess(field IField, value string) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	if value == DateToday || value == DateTomorrow || value == DateYesterday {
-		return larkbitable.NewConditionBuilder().
-			FieldName(field.Name()).
-			Operator(FilterTypeIsLess).
-			Value([]string{value}).
-			Build()
-	}
-	us, err := beijingDateTimeStrToUnixSeconds(value)
-	if err != nil {
-		panic(err)
-	}
-	value = fmt.Sprintf("%d", us*1000)
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIsLess).
-		Value([]string{"ExactDate", value}).
-		Build()
+func filterDateIs(name string, time time.Time) *larkbitable.Condition {
+	value := fmt.Sprintf("%d", time.UnixMilli())
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"ExactDate", value}).Build()
 }
 
-func FilterDateIsCurrentWeek(field IField) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"CurrentWeek"}).
-		Build()
+func filterDateIsGreaterThanToday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreater).Value([]string{"Today"}).Build()
 }
 
-func FilterDateIsLastWeek(field IField) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"LastWeek"}).
-		Build()
+func filterDateIsGreaterThanTomorrow(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreater).Value([]string{"Tomorrow"}).Build()
 }
 
-func FilterDateIsCurrentMonth(field IField) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"CurrentMonth"}).
-		Build()
+func filterDateIsGreaterThanYesterday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreater).Value([]string{"Yesterday"}).Build()
 }
 
-func FilterDateIsLastMonth(field IField) *larkbitable.Condition {
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"LastMonth"}).
-		Build()
+func filterDateIsGreater(name string, time time.Time) *larkbitable.Condition {
+	value := fmt.Sprintf("%d", time.UnixMilli())
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsGreater).Value([]string{"ExactDate", value}).Build()
 }
 
-func FilterDateIsTheLastWeek(field IField) *larkbitable.Condition {
-	// 过去七天内
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"TheLastWeek"}).
-		Build()
+func filterDateIsLessThanToday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLess).Value([]string{"Today"}).Build()
 }
 
-func FilterDateTheNextWeek(field IField) *larkbitable.Condition {
-	// 未来七天内
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"TheNextWeek"}).
-		Build()
+func filterDateIsLessThanTomorrow(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLess).Value([]string{"Tomorrow"}).Build()
 }
 
-func FilterDateIsTheLastMonth(field IField) *larkbitable.Condition {
-	// 过去三十天内
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"TheLastMonth"}).
-		Build()
+func filterDateIsLessThanYesterday(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLess).Value([]string{"Yesterday"}).Build()
 }
 
-func FilterDateTheNextMonth(field IField) *larkbitable.Condition {
-	// 未来三十天内
-	if field.Type() != FieldTypeDate && field.Type() != FieldTypeUpdatedTime {
-		log.FatalLog("expect date field type, actual: %s", field.Type().String())
-	}
-	return larkbitable.NewConditionBuilder().
-		FieldName(field.Name()).
-		Operator(FilterTypeIs).
-		Value([]string{"TheNextMonth"}).
-		Build()
+func filterDateIsLess(name string, time time.Time) *larkbitable.Condition {
+	value := fmt.Sprintf("%d", time.UnixMilli())
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIsLess).Value([]string{"ExactDate", value}).Build()
+}
+
+func filterDateIsCurrentWeek(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"CurrentWeek"}).Build()
+}
+
+func filterDateIsLastWeek(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"LastWeek"}).Build()
+}
+
+func filterDateIsCurrentMonth(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"CurrentMonth"}).Build()
+}
+
+func filterDateIsLastMonth(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"LastMonth"}).Build()
+}
+
+func filterDateIsTheLastWeek(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"TheLastWeek"}).Build()
+}
+
+func filterDateTheNextWeek(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"TheNextWeek"}).Build()
+}
+
+func filterDateIsTheLastMonth(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"TheLastMonth"}).Build()
+}
+
+func filterDateTheNextMonth(name string) *larkbitable.Condition {
+	return larkbitable.NewConditionBuilder().FieldName(name).Operator(FilterTypeIs).Value([]string{"TheNextMonth"}).Build()
 }

@@ -2,7 +2,7 @@ package larkbase
 
 import "sort"
 
-func NewTable(id, name string, fields map[string]IField) *Table {
+func NewTable(id, name string, fields map[string]Field) *Table {
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
 		keys = append(keys, k)
@@ -19,6 +19,6 @@ func NewTable(id, name string, fields map[string]IField) *Table {
 type Table struct {
 	id        string
 	name      string
-	fields    map[string]IField
+	fields    map[string]Field
 	fieldKeys []string
 }

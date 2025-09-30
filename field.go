@@ -1,18 +1,14 @@
 package larkbase
 
-/*
-https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-field/guide
+import (
+	"encoding/json"
+	"fmt"
+	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	"strings"
+	"time"
+)
 
-文本：原值展示，不支持 markdown 语法，"xxx"
-单选：填写选项值，对于新的选项值，将会创建一个新的选项，"xxx"
-数字：填写数字格式的值，100
-日期：填写毫秒级时间戳，1674206443000
-多选：填写多个选项值，对于新的选项值，将会创建一个新的选项。如果填写多个相同的新选项值，将会创建多个相同的选项，[]any{"xx"}
-复选框：填写 true 或 false
-超链接：参考以下示例，text 为文本值，link 为 URL 链接
-	map[string]interface{}{`text`: `飞书多维表格官网`, `link`: `https://www.feishu.cn/product/base`}
-附件：参考 [{"file_token": "Vl3FbVkvnowlgpxpqsAbBrtFcrd"}]
-*/
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-field/guide
 
 const FieldTypeText = 1
 const FieldTypeNumber = 2
@@ -21,21 +17,22 @@ const FieldTypeMultiSelect = 4
 const FieldTypeDate = 5
 const FieldTypeCheckbox = 7
 const FieldTypePerson = 11
-const FieldTypePhoneNumber = 13
+const FieldTypePhone = 13
 const FieldTypeUrl = 15
 const FieldTypeMedia = 17
-const FieldTypeOneWayAssociation = 18
-const FieldTypeLookupReference = 19
+const FieldTypeSingleLink = 18
+const FieldTypeLookup = 19
 const FieldTypeFormula = 20
-const FieldTypeTwoWayAssociation = 21
-const FieldTypeGeographicLocation = 22
+const FieldTypeDuplexLink = 21
+const FieldTypeLocation = 22
 const FieldTypeGroup = 23
 const FieldTypeWorkflow = 24
 const FieldTypeCreatedTime = 1001
-const FieldTypeUpdatedTime = 1002
+const FieldTypeModifiedTime = 1002
 const FieldTypeCreatePerson = 1003
 const FieldTypeModifyPerson = 1004
 const FieldTypeAutoNumber = 1005
+const FieldTypeButton = 3001
 
 type FieldType int
 
@@ -55,73 +52,289 @@ func (t FieldType) String() string {
 		return "Checkbox"
 	case FieldTypePerson:
 		return "Person"
-	case FieldTypePhoneNumber:
-		return "PhoneNumber"
+	case FieldTypePhone:
+		return "Phone"
 	case FieldTypeUrl:
 		return "Url"
 	case FieldTypeMedia:
 		return "Media"
-	case FieldTypeOneWayAssociation:
-		return "OneWayAssociation"
-	case FieldTypeLookupReference:
-		return "LookupReference"
+	case FieldTypeSingleLink:
+		return "SingleLink"
+	case FieldTypeLookup:
+		return "Lookup"
 	case FieldTypeFormula:
 		return "Formula"
-	case FieldTypeTwoWayAssociation:
-		return "TwoWayAssociation"
-	case FieldTypeGeographicLocation:
-		return "GeographicLocation"
+	case FieldTypeDuplexLink:
+		return "DuplexLink"
+	case FieldTypeLocation:
+		return "Location"
 	case FieldTypeGroup:
 		return "Group"
 	case FieldTypeWorkflow:
 		return "Workflow"
 	case FieldTypeCreatedTime:
 		return "CreatedTime"
-	case FieldTypeUpdatedTime:
-		return "UpdatedTime"
+	case FieldTypeModifiedTime:
+		return "ModifiedTime"
 	case FieldTypeCreatePerson:
 		return "CreatePerson"
 	case FieldTypeModifyPerson:
 		return "ModifyPerson"
 	case FieldTypeAutoNumber:
 		return "AutoNumber"
+	case FieldTypeButton:
+		return "Button"
 	default:
 		return "?"
 	}
 }
 
-type IField interface {
-	Name() string
-	SetName(v string)
-	Type() FieldType
-	Value() string
-	SetValue(v string)
-	Parse(v any) IField
+type Field struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
-type BaseField struct {
-	name string
+func (f *Field) parseValue(v any) {
+	switch f.Type {
+	case "Text":
+		if v2, ok := v.([]any); ok && len(v2) == 1 {
+			if v3, ok2 := v2[0].(map[string]any); ok2 {
+				f.Value = v3["text"].(string)
+			}
+		}
+	case "Number":
+		f.Value = fmt.Sprintf("%g", v.(float64))
+	case "SingleSelect":
+		f.Value = v.(string)
+	case "MultiSelect":
+		if vv, ok := v.([]any); ok {
+			items := make([]string, 0)
+			for _, v2 := range vv {
+				items = append(items, v2.(string))
+			}
+			b, _ := json.Marshal(items)
+			f.Value = string(b)
+		}
+	case "Date":
+		f.Value = unixSecondsToBeijingDateTimeStr(int64(v.(float64) / 1000))
+	case "Checkbox":
+		f.Value = map[bool]string{true: "1", false: ""}[v.(bool)]
+	case "Person":
+		if vv, ok := v.([]any); ok {
+			items := make([]string, 0)
+			for _, v2 := range vv {
+				if v3, ok2 := v2.(map[string]any); ok2 {
+					items = append(items, v3["name"].(string))
+				}
+			}
+			f.Value = strings.Join(items, ",")
+		}
+	case "Phone":
+		f.Value = v.(string)
+	case "Url":
+		if v2, ok := v.(map[string]any); ok {
+			f.Value = v2["link"].(string)
+		}
+	case "Media":
+		if vv, ok := v.([]any); ok {
+			items := make([]string, 0)
+			for _, v2 := range vv {
+				if v3, ok2 := v2.(map[string]any); ok2 {
+					items = append(items, v3["file_token"].(string))
+				}
+			}
+			f.Value = strings.Join(items, ",")
+		}
+	case "SingleLink":
+		f.Value = v.(string)
+	case "Lookup":
+		f.Value = v.(string)
+	case "Formula":
+		f.Value = v.(string)
+	case "DuplexLink":
+		f.Value = v.(string)
+	case "Location":
+		f.Value = v.(string)
+	case "Group":
+		f.Value = v.(string)
+	case "Workflow":
+		f.Value = v.(string)
+	case "CreatedTime":
+		f.Value = unixSecondsToBeijingDateTimeStr(int64(v.(float64) / 1000))
+	case "ModifiedTime":
+		f.Value = unixSecondsToBeijingDateTimeStr(int64(v.(float64) / 1000))
+	case "CreatePerson":
+		f.Value = v.(string)
+	case "ModifyPerson":
+		f.Value = v.(string)
+	case "AutoNumber":
+		f.Value = v.(string)
+	case "Button":
+		f.Value = v.(string)
+	}
 }
 
-func (f *BaseField) Name() string {
-	return f.name
+type TextField Field
+
+func (f *TextField) FilterIs(value string) *larkbitable.Condition {
+	return filterIs(f.Name, value)
+}
+func (f *TextField) FilterIsNot(value string) *larkbitable.Condition {
+	return filterIsNot(f.Name, value)
+}
+func (f *TextField) FilterContains(value string) *larkbitable.Condition {
+	return filterContains(f.Name, value)
+}
+func (f *TextField) FilterDoesNotContains(value string) *larkbitable.Condition {
+	return filterDoesNotContains(f.Name, value)
+}
+func (f *TextField) FilterIsEmpty() *larkbitable.Condition {
+	return filterIsEmpty(f.Name)
+}
+func (f *TextField) FilterIsNotEmpty() *larkbitable.Condition {
+	return filterIsNotEmpty(f.Name)
 }
 
-func (f *BaseField) SetName(v string) {
-	f.name = v
+type NumberField Field
+
+func (f *NumberField) FilterIs(value string) *larkbitable.Condition {
+	return filterIs(f.Name, value)
+}
+func (f *NumberField) FilterIsNot(value string) *larkbitable.Condition {
+	return filterIsNot(f.Name, value)
+}
+func (f *NumberField) FilterIsGreater(value string) *larkbitable.Condition {
+	return filterIsGreater(f.Name, value)
+}
+func (f *NumberField) FilterIsGreaterEqual(value string) *larkbitable.Condition {
+	return filterIsGreaterEqual(f.Name, value)
+}
+func (f *NumberField) FilterIsLess(value string) *larkbitable.Condition {
+	return filterIsLess(f.Name, value)
+}
+func (f *NumberField) FilterIsLessEqual(value string) *larkbitable.Condition {
+	return filterIsLessEqual(f.Name, value)
+}
+func (f *NumberField) FilterIsEmpty() *larkbitable.Condition {
+	return filterIsEmpty(f.Name)
+}
+func (f *NumberField) FilterIsNotEmpty() *larkbitable.Condition {
+	return filterIsNotEmpty(f.Name)
 }
 
-func (f *BaseField) Type() FieldType {
-	return 0
+type SingleSelectField TextField
+
+type MultiSelectField TextField
+
+type DateField Field
+
+func (f *DateField) FilterIsToday() *larkbitable.Condition {
+	return filterDateIsToday(f.Name)
+}
+func (f *DateField) FilterIsTomorrow() *larkbitable.Condition {
+	return filterDateIsTomorrow(f.Name)
+}
+func (f *DateField) FilterIsYesterday() *larkbitable.Condition {
+	return filterDateIsYesterday(f.Name)
+}
+func (f *DateField) FilterIs(time time.Time) *larkbitable.Condition {
+	return filterDateIs(f.Name, time)
+}
+func (f *DateField) FilterIsGreaterThanToday() *larkbitable.Condition {
+	return filterDateIsGreaterThanToday(f.Name)
+}
+func (f *DateField) FilterIsGreaterThanTomorrow() *larkbitable.Condition {
+	return filterDateIsGreaterThanTomorrow(f.Name)
+}
+func (f *DateField) FilterIsGreaterThanYesterday() *larkbitable.Condition {
+	return filterDateIsGreaterThanYesterday(f.Name)
+}
+func (f *DateField) FilterIsGreater(time time.Time) *larkbitable.Condition {
+	return filterDateIsGreater(f.Name, time)
+}
+func (f *DateField) FilterIsLessThanToday() *larkbitable.Condition {
+	return filterDateIsLessThanToday(f.Name)
+}
+func (f *DateField) FilterIsLessThanTomorrow() *larkbitable.Condition {
+	return filterDateIsLessThanTomorrow(f.Name)
+}
+func (f *DateField) FilterIsLessThanYesterday() *larkbitable.Condition {
+	return filterDateIsLessThanYesterday(f.Name)
 }
 
-func (f *BaseField) Value() string {
-	return ""
+func (f *DateField) FilterIsLess(time time.Time) *larkbitable.Condition {
+	return filterDateIsLess(f.Name, time)
+}
+func (f *DateField) FilterIsEmpty() *larkbitable.Condition {
+	return filterIsEmpty(f.Name)
+}
+func (f *DateField) FilterIsNotEmpty() *larkbitable.Condition {
+	return filterIsNotEmpty(f.Name)
 }
 
-func (f *BaseField) SetValue(_ any) {
+func (f *DateField) FilterIsCurrentWeek() *larkbitable.Condition {
+	return filterDateIsCurrentWeek(f.Name)
 }
 
-func (f *BaseField) Parse(v any) IField {
-	return nil
+func (f *DateField) FilterIsLastWeek() *larkbitable.Condition {
+	return filterDateIsLastWeek(f.Name)
 }
+func (f *DateField) FilterIsCurrentMonth() *larkbitable.Condition {
+	return filterDateIsCurrentMonth(f.Name)
+}
+
+func (f *DateField) FilterIsLastMonth() *larkbitable.Condition {
+	return filterDateIsLastMonth(f.Name)
+}
+
+func (f *DateField) FilterIsTheLastWeek() *larkbitable.Condition {
+	return filterDateIsTheLastWeek(f.Name)
+}
+
+func (f *DateField) FilterTheNextWeek() *larkbitable.Condition {
+	return filterDateTheNextWeek(f.Name)
+}
+
+func (f *DateField) FilterIsTheLastMonth() *larkbitable.Condition {
+	return filterDateIsTheLastMonth(f.Name)
+}
+
+func (f *DateField) FilterTheNextMonth() *larkbitable.Condition {
+	return filterDateTheNextMonth(f.Name)
+}
+
+type CheckboxField Field
+
+func (f *CheckboxField) FilterIs(value bool) *larkbitable.Condition {
+	return filterIs(f.Name, map[bool]string{true: "1", false: ""}[value])
+}
+
+type PersonField TextField
+
+type PhoneField TextField
+
+type UrlField TextField
+
+type MediaField Field
+
+func (f *MediaField) FilterIsEmpty() *larkbitable.Condition {
+	return filterIsEmpty(f.Name)
+}
+func (f *MediaField) FilterIsNotEmpty() *larkbitable.Condition {
+	return filterIsNotEmpty(f.Name)
+}
+
+type SingleLinkField Field
+type LookupField Field
+type FormulaField Field
+type DuplexLinkField Field
+type LocationField Field
+type GroupField Field
+type WorkflowField Field
+type CreatedTimeField DateField
+type ModifiedTimeField DateField
+type CreatePersonField PersonField
+type ModifyPersonField PersonField
+type AutoNumberField NumberField
+type ButtonField Field

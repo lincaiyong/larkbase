@@ -25,9 +25,12 @@ func Marshal(obj any) (string, error) {
 			if fieldType.Name() == "Meta" {
 				continue
 			}
-			fieldPtr := fieldValue.Addr()
-			ifield := fieldPtr.Interface().(IField)
-			m[ifield.Name()] = ifield.Value()
+			f := fieldValue.Convert(reflect.TypeOf(Field{})).Interface().(Field)
+			n := f.Name
+			v := f.Value
+			if v != "" {
+				m[n] = v
+			}
 		}
 		s = append(s, m)
 	}

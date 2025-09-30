@@ -18,7 +18,6 @@ type Demo struct {
 	Single     larkbase.SingleSelectField `lark:"单选"`
 	Person     larkbase.PersonField       `lark:"人员"`
 	Check      larkbase.CheckboxField     `lark:"check"`
-	//X          larkbase.CheckboxField     `lark:"公式"`
 }
 
 func main() {
@@ -31,7 +30,7 @@ func main() {
 	}
 	fmt.Println(demoConn.TableName(), demoConn.TableId())
 	for _, field := range demoConn.TableFields() {
-		fmt.Println(field.Name(), field.Type().String())
+		fmt.Println(field.Name, field.Type)
 	}
 
 	count, err := demoConn.CountRecords()
@@ -48,6 +47,18 @@ func main() {
 		os.Exit(1)
 	}
 	s, err := larkbase.Marshal(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+
+	err = demoConn.Where(demo.Name.FilterIsNot("andy")).QueryRecords(&records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	s, err = larkbase.Marshal(records)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

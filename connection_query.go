@@ -7,6 +7,11 @@ import (
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 )
 
+type Record struct {
+	Id     string
+	Fields map[string]Field
+}
+
 func (c *Connection) queryRecordsByPage(pageToken string, records []*Record) ([]*Record, string, error) {
 	const pageSize = 100
 	bodyBuilder := larkbitable.NewSearchAppTableRecordReqBodyBuilder()
@@ -34,11 +39,11 @@ func (c *Connection) queryRecordsByPage(pageToken string, records []*Record) ([]
 	for _, item := range resp.Data.Items {
 		record := &Record{
 			Id:     *item.RecordId,
-			Fields: make(map[string]IField),
+			Fields: make(map[string]Field),
 		}
 		for name, fi := range item.Fields {
-			f := c.table.fields[name]
-			field := f.Parse(fi)
+			field := c.table.fields[name]
+			field.parseValue(fi)
 			record.Fields[name] = field
 		}
 		records = append(records, record)

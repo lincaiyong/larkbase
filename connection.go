@@ -31,7 +31,7 @@ func (c *Connection) TableId() string {
 	return c.table.id
 }
 
-func (c *Connection) TableFields() map[string]IField {
+func (c *Connection) TableFields() map[string]Field {
 	return c.table.fields
 }
 
@@ -60,18 +60,18 @@ func (c *Connection) Where(filters ...*larkbitable.Condition) *Connection {
 	return c
 }
 
-func (c *Connection) QueryRecords(ptr any) error {
-	ptrValue := reflect.ValueOf(ptr)
-	if ptrValue.Kind() != reflect.Ptr {
-		return fmt.Errorf("invalid argument: expect a pointer, %v", ptr)
+func (c *Connection) QueryRecords(arg any) error {
+	slicePtrValue := reflect.ValueOf(arg)
+	if slicePtrValue.Kind() != reflect.Ptr {
+		return fmt.Errorf("invalid argument: expect a pointer, not %v", arg)
 	}
-	sliceValue := ptrValue.Elem()
+	sliceValue := slicePtrValue.Elem()
 	if sliceValue.Kind() != reflect.Slice {
-		return fmt.Errorf("invalid argument: expect a pointer of slice, %v", ptr)
+		return fmt.Errorf("invalid argument: expect a pointer of slice, not %v", arg)
 	}
 	sliceElemType := sliceValue.Type().Elem()
 	if sliceElemType.Kind() != reflect.Struct {
-		return fmt.Errorf("invalid argument: expect a pointer of slice of struct, %v", ptr)
+		return fmt.Errorf("invalid argument: expect a pointer of slice with struct element (like []Demo), %v", arg)
 	}
 
 	records := make([]*Record, 0)
@@ -117,17 +117,17 @@ func (c *Connection) convertRecordToStruct(record *Record, structValue reflect.V
 			continue
 		}
 		var value string
-		recordField := record.Fields[tag]
-		if recordField != nil {
-			value = recordField.Value()
+		recordField, ok := record.Fields[tag]
+		if ok {
+			value = recordField.Value
 		}
 		if field.Type.Kind() != reflect.Struct {
 			return fmt.Errorf("invalid struct field: %s %s", field.Name, field.Type.String())
 		}
 		newInstance := reflect.New(field.Type)
-		tableField := newInstance.Interface().(IField)
-		tableField.SetName(tag)
-		tableField.SetValue(value)
+		newInstanceAsField := newInstance.Convert(reflect.TypeOf(&Field{})).Interface().(*Field)
+		newInstanceAsField.Name = tag
+		newInstanceAsField.Value = value
 		fieldValue.Set(newInstance.Elem())
 	}
 	return nil
