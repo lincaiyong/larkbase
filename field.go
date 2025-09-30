@@ -95,8 +95,7 @@ type IField interface {
 	SetName(v string)
 	Type() FieldType
 	Value() string
-	SetValue(v any) error
-	Build() any
+	SetValue(v string)
 	Parse(v any) IField
 }
 
@@ -120,12 +119,7 @@ func (f *BaseField) Value() string {
 	return ""
 }
 
-func (f *BaseField) SetValue(_ any) error {
-	return nil
-}
-
-func (f *BaseField) Build() any {
-	return ""
+func (f *BaseField) SetValue(_ any) {
 }
 
 func (f *BaseField) Parse(v any) IField {

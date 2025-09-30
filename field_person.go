@@ -1,7 +1,6 @@
 package larkbase
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -10,29 +9,20 @@ type PersonField struct {
 	value []string
 }
 
-func (p *PersonField) Type() FieldType {
+func (f *PersonField) Type() FieldType {
 	return FieldTypePerson
 }
 
-func (p *PersonField) Value() string {
-	return strings.Join(p.value, ",")
+func (f *PersonField) Value() string {
+	return strings.Join(f.value, ",")
 }
 
-func (p *PersonField) Build() any {
-	return p.value
+func (f *PersonField) SetValue(v string) {
+	f.value = strings.Split(v, ",")
 }
 
-func (p *PersonField) SetValue(v any) error {
-	if vv, ok := v.([]string); !ok {
-		return fmt.Errorf("value should be []string, actual: %v", v)
-	} else {
-		p.value = vv
-		return nil
-	}
-}
-
-func (p *PersonField) Parse(v any) IField {
-	ret := &PersonField{BaseField: BaseField{name: p.name}}
+func (f *PersonField) Parse(v any) IField {
+	ret := &PersonField{BaseField: BaseField{name: f.name}}
 	if v, ok := v.([]any); ok {
 		for _, v2 := range v {
 			if v3, ok2 := v2.(map[string]any); ok2 {

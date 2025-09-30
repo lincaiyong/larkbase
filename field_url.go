@@ -1,40 +1,24 @@
 package larkbase
 
-import (
-	"fmt"
-)
-
 type UrlField struct {
 	BaseField
 	value string
 }
 
-func (u *UrlField) Type() FieldType {
+func (f *UrlField) Type() FieldType {
 	return FieldTypeUrl
 }
 
-func (u *UrlField) Value() string {
-	return u.value
+func (f *UrlField) Value() string {
+	return f.value
 }
 
-func (u *UrlField) SetValue(v any) error {
-	if vv, ok := v.(string); !ok {
-		return fmt.Errorf("value should be string, actual: %v", v)
-	} else {
-		u.value = vv
-		return nil
-	}
+func (f *UrlField) SetValue(v string) {
+	f.value = v
 }
 
-func (u *UrlField) Build() any {
-	return map[string]any{
-		"text": u.value,
-		"link": u.value,
-	}
-}
-
-func (u *UrlField) Parse(v any) IField {
-	ret := &UrlField{BaseField: BaseField{name: u.name}}
+func (f *UrlField) Parse(v any) IField {
+	ret := &UrlField{BaseField: BaseField{name: f.name}}
 	if v, ok := v.(map[string]any); ok {
 		ret.value = v["link"].(string)
 	}

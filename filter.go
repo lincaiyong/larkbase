@@ -4,7 +4,6 @@ import (
 	"fmt"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	"github.com/lincaiyong/log"
-	"time"
 )
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
@@ -207,19 +206,6 @@ const DateToday = "Today"
 const DateTomorrow = "Tomorrow"
 const DateYesterday = "Yesterday"
 
-func dateTimeStrToTime(s string) time.Time {
-	t, err := time.ParseInLocation("2006-01-02 15:04:05", s, time.FixedZone("CST", 8*60*60))
-	if err != nil {
-		log.FatalLog("fail to parse timestamp: %v", err)
-	}
-	return t
-}
-
-func dateTimeStrToTimestamp(s string) int64 {
-	t := dateTimeStrToTime(s)
-	return t.UnixMilli()
-}
-
 func FilterDateIs(field IField, value string) *larkbitable.Condition {
 	if field.Type() != FieldTypeDate {
 		log.FatalLog("expect date field type, actual: %d", field.Type())
@@ -231,7 +217,11 @@ func FilterDateIs(field IField, value string) *larkbitable.Condition {
 			Value([]string{value}).
 			Build()
 	}
-	value = fmt.Sprintf("%d", dateTimeStrToTimestamp(value))
+	us, err := beijingDateTimeStrToUnixSeconds(value)
+	if err != nil {
+		panic(err)
+	}
+	value = fmt.Sprintf("%d", us*1000)
 	return larkbitable.NewConditionBuilder().
 		FieldName(field.Name()).
 		Operator(FilterTypeIs).
@@ -250,7 +240,11 @@ func FilterDateIsGreater(field IField, value string) *larkbitable.Condition {
 			Value([]string{value}).
 			Build()
 	}
-	value = fmt.Sprintf("%d", dateTimeStrToTimestamp(value))
+	us, err := beijingDateTimeStrToUnixSeconds(value)
+	if err != nil {
+		panic(err)
+	}
+	value = fmt.Sprintf("%d", us*1000)
 	return larkbitable.NewConditionBuilder().
 		FieldName(field.Name()).
 		Operator(FilterTypeIsGreater).
@@ -269,7 +263,11 @@ func FilterDateIsLess(field IField, value string) *larkbitable.Condition {
 			Value([]string{value}).
 			Build()
 	}
-	value = fmt.Sprintf("%d", dateTimeStrToTimestamp(value))
+	us, err := beijingDateTimeStrToUnixSeconds(value)
+	if err != nil {
+		panic(err)
+	}
+	value = fmt.Sprintf("%d", us*1000)
 	return larkbitable.NewConditionBuilder().
 		FieldName(field.Name()).
 		Operator(FilterTypeIsLess).

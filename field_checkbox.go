@@ -1,41 +1,32 @@
 package larkbase
 
-import (
-	"fmt"
-)
-
 type CheckboxField struct {
 	BaseField
 	value bool
 }
 
-func (c *CheckboxField) Type() FieldType {
+func (f *CheckboxField) Type() FieldType {
 	return FieldTypeCheckbox
 }
 
-func (c *CheckboxField) Value() string {
-	if c.value {
+func (f *CheckboxField) Value() string {
+	if f.value {
 		return "true"
 	} else {
 		return "false"
 	}
 }
 
-func (c *CheckboxField) SetValue(v any) error {
-	if vv, ok := v.(bool); !ok {
-		return fmt.Errorf("value should be bool, actual: %v", v)
+func (f *CheckboxField) SetValue(v string) {
+	if v == "true" {
+		f.value = true
 	} else {
-		c.value = vv
-		return nil
+		f.value = false
 	}
 }
 
-func (c *CheckboxField) Build() any {
-	return c.value
-}
-
-func (c *CheckboxField) Parse(v any) IField {
-	ret := &CheckboxField{BaseField: BaseField{name: c.name}}
+func (f *CheckboxField) Parse(v any) IField {
+	ret := &CheckboxField{BaseField: BaseField{name: f.name}}
 	ret.value = v.(bool)
 	return ret
 }

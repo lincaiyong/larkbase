@@ -1,40 +1,28 @@
 package larkbase
 
-import (
-	"fmt"
-)
-
 type AutoNumberField struct {
 	BaseField
 	value *string
 }
 
-func (n *AutoNumberField) Type() FieldType {
+func (f *AutoNumberField) Type() FieldType {
 	return FieldTypeAutoNumber
 }
 
-func (n *AutoNumberField) Value() string {
-	if n.value == nil {
+func (f *AutoNumberField) Value() string {
+	if f.value == nil {
 		return ""
 	}
-	return *n.value
+	return *f.value
 }
 
-func (n *AutoNumberField) SetValue(v any) error {
-	if vv, ok := v.(string); ok {
-		n.value = &vv
-		return nil
-	}
-	return fmt.Errorf("value should be number, actual: %v", v)
+func (f *AutoNumberField) SetValue(v string) {
+	f.value = &v
 }
 
-func (n *AutoNumberField) Build() any {
-	return n.value
-}
-
-func (n *AutoNumberField) Parse(v any) IField {
-	ret := &AutoNumberField{BaseField: BaseField{name: n.name}}
-	f := v.(string)
-	ret.value = &f
+func (f *AutoNumberField) Parse(v any) IField {
+	ret := &AutoNumberField{BaseField: BaseField{name: f.name}}
+	n := v.(string)
+	ret.value = &n
 	return ret
 }

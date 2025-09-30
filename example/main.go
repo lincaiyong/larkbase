@@ -9,11 +9,16 @@ import (
 type Demo struct {
 	larkbase.Meta `lark:"https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y"`
 
-	No         larkbase.AutoNumberField `lark:"no"`
-	Name       larkbase.TextField       `lark:"name"`
-	Age        larkbase.NumberField     `lark:"age"`
-	Attachment larkbase.MediaField      `lark:"附件"`
-	Date       larkbase.DateField       `lark:"日期"`
+	No         larkbase.AutoNumberField   `lark:"no"`
+	Name       larkbase.TextField         `lark:"name"`
+	Age        larkbase.NumberField       `lark:"age"`
+	Attachment larkbase.MediaField        `lark:"附件"`
+	Date       larkbase.DateField         `lark:"日期"`
+	Multi      larkbase.MultiSelectField  `lark:"multi"`
+	Single     larkbase.SingleSelectField `lark:"单选"`
+	Person     larkbase.PersonField       `lark:"人员"`
+	Check      larkbase.CheckboxField     `lark:"check"`
+	//X          larkbase.CheckboxField     `lark:"公式"`
 }
 
 func main() {
@@ -36,15 +41,16 @@ func main() {
 	}
 	fmt.Println(count)
 
-	records, err := demoConn.Where(demo.Name.Contains("andy")).QueryRecords()
+	var records []Demo
+	err = demoConn.Where(demo.Name.FilterIs("andy")).QueryRecords(&records)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	for _, record := range records {
-		fmt.Println(record.Id)
-		for _, field := range record.Fields {
-			fmt.Println(field.Name(), field.Type().String(), field.Value())
-		}
+	s, err := larkbase.Marshal(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+	fmt.Println(s)
 }

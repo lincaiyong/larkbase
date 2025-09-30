@@ -2,6 +2,7 @@ package larkbase
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type NumberField struct {
@@ -9,37 +10,25 @@ type NumberField struct {
 	value *float64
 }
 
-func (n *NumberField) Type() FieldType {
+func (f *NumberField) Type() FieldType {
 	return FieldTypeNumber
 }
 
-func (n *NumberField) Value() string {
-	if n.value == nil {
+func (f *NumberField) Value() string {
+	if f.value == nil {
 		return ""
 	}
-	return fmt.Sprintf("%g", *n.value)
+	return fmt.Sprintf("%g", *f.value)
 }
 
-func (n *NumberField) SetValue(v any) error {
-	if vv, ok := v.(float64); ok {
-		n.value = &vv
-		return nil
-	}
-	if vv, ok := v.(int); ok {
-		f := float64(vv)
-		n.value = &f
-		return nil
-	}
-	return fmt.Errorf("value should be number, actual: %v", v)
+func (f *NumberField) SetValue(v string) {
+	n, _ := strconv.ParseFloat(v, 64)
+	f.value = &n
 }
 
-func (n *NumberField) Build() any {
-	return n.value
-}
-
-func (n *NumberField) Parse(v any) IField {
-	ret := &NumberField{BaseField: BaseField{name: n.name}}
-	f := v.(float64)
-	ret.value = &f
+func (f *NumberField) Parse(v any) IField {
+	ret := &NumberField{BaseField: BaseField{name: f.name}}
+	n := v.(float64)
+	ret.value = &n
 	return ret
 }

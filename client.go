@@ -183,6 +183,10 @@ func (c *Client) checkTableStruct(ptr any) (meta string, fields map[string]IFiel
 		tableField.SetName(tag)
 		fields[tag] = tableField
 
+		if !fieldValue.CanSet() {
+			err = fmt.Errorf("invalid struct field: %s %s", name, type_)
+			return
+		}
 		fieldValue.Set(newInstance.Elem())
 	}
 	if meta == "" {

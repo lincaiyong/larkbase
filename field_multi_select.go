@@ -2,7 +2,6 @@ package larkbase
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type MultiSelectField struct {
@@ -10,34 +9,21 @@ type MultiSelectField struct {
 	value []string
 }
 
-func (m *MultiSelectField) Type() FieldType {
+func (f *MultiSelectField) Type() FieldType {
 	return FieldTypeMultiSelect
 }
 
-func (m *MultiSelectField) Value() string {
-	b, _ := json.Marshal(m.value)
+func (f *MultiSelectField) Value() string {
+	b, _ := json.Marshal(f.value)
 	return string(b)
 }
 
-func (m *MultiSelectField) SetValue(v any) error {
-	if vv, ok := v.([]string); !ok {
-		return fmt.Errorf("value should be []string, actual: %v", v)
-	} else {
-		m.value = vv
-		return nil
-	}
+func (f *MultiSelectField) SetValue(v string) {
+	_ = json.Unmarshal([]byte(v), &f.value)
 }
 
-func (m *MultiSelectField) Build() any {
-	tmp := make([]any, len(m.value))
-	for i, sel := range m.value {
-		tmp[i] = sel
-	}
-	return tmp
-}
-
-func (m *MultiSelectField) Parse(v any) IField {
-	ret := &MultiSelectField{BaseField: BaseField{name: m.name}}
+func (f *MultiSelectField) Parse(v any) IField {
+	ret := &MultiSelectField{BaseField: BaseField{name: f.name}}
 	if v, ok := v.([]any); ok {
 		for _, v2 := range v {
 			ret.value = append(ret.value, v2.(string))
