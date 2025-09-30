@@ -21,9 +21,21 @@ const FieldTypeMultiSelect = 4
 const FieldTypeDate = 5
 const FieldTypeCheckbox = 7
 const FieldTypePerson = 11
+const FieldTypePhoneNumber = 13
 const FieldTypeUrl = 15
 const FieldTypeMedia = 17
+const FieldTypeOneWayAssociation = 18
+const FieldTypeLookupReference = 19
+const FieldTypeFormula = 20
+const FieldTypeTwoWayAssociation = 21
+const FieldTypeGeographicLocation = 22
+const FieldTypeGroup = 23
+const FieldTypeWorkflow = 24
+const FieldTypeCreatedTime = 1001
 const FieldTypeUpdatedTime = 1002
+const FieldTypeCreatePerson = 1003
+const FieldTypeModifyPerson = 1004
+const FieldTypeAutoNumber = 1005
 
 type FieldType int
 
@@ -43,12 +55,38 @@ func (t FieldType) String() string {
 		return "Checkbox"
 	case FieldTypePerson:
 		return "Person"
+	case FieldTypePhoneNumber:
+		return "PhoneNumber"
 	case FieldTypeUrl:
 		return "Url"
 	case FieldTypeMedia:
 		return "Media"
-	default:
+	case FieldTypeOneWayAssociation:
+		return "OneWayAssociation"
+	case FieldTypeLookupReference:
+		return "LookupReference"
+	case FieldTypeFormula:
+		return "Formula"
+	case FieldTypeTwoWayAssociation:
+		return "TwoWayAssociation"
+	case FieldTypeGeographicLocation:
+		return "GeographicLocation"
+	case FieldTypeGroup:
+		return "Group"
+	case FieldTypeWorkflow:
+		return "Workflow"
+	case FieldTypeCreatedTime:
+		return "CreatedTime"
+	case FieldTypeUpdatedTime:
 		return "UpdatedTime"
+	case FieldTypeCreatePerson:
+		return "CreatePerson"
+	case FieldTypeModifyPerson:
+		return "ModifyPerson"
+	case FieldTypeAutoNumber:
+		return "AutoNumber"
+	default:
+		return "?"
 	}
 }
 

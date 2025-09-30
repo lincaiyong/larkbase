@@ -22,71 +22,6 @@ package larkbase
 //	return client
 //}
 
-//func (c *Client) GetFields(checkFields map[string]int) map[string]IField {
-//	req := larkbitable.NewListAppTableFieldReqBuilder().
-//		AppToken(c.appToken).
-//		TableId(c.table.Id).
-//		PageSize(100).
-//		Build()
-//	resp, err := c.Bitable.V1.AppTableField.List(context.Background(), req)
-//	if err != nil {
-//		log.FatalLog("fail to call bitable list field: %v", err)
-//	}
-//	if !resp.Success() {
-//		log.FatalLog("unexpected response error: %s", larkcore.Prettify(resp.CodeError))
-//	}
-//	hasMore := *resp.Data.HasMore
-//	if hasMore {
-//		log.FatalLog("unexpected has more than 100 fields")
-//	}
-//	result := make(map[string]IField)
-//	for _, item := range resp.Data.Items {
-//		var field IField
-//		baseField := BaseField{
-//			id:        *item.FieldId,
-//			name:      *item.FieldName,
-//			isPrimary: *item.IsPrimary,
-//		}
-//		switch *item.Type {
-//		case FieldTypeText:
-//			field = &TextField{BaseField: baseField}
-//		case FieldTypeNumber:
-//			field = &NumberField{BaseField: baseField}
-//		case FieldTypeSingleSelect:
-//			field = &SingleSelectField{BaseField: baseField}
-//		case FieldTypeMultiSelect:
-//			field = &MultiSelectField{BaseField: baseField}
-//		case FieldTypeDate:
-//			field = &DateField{BaseField: baseField}
-//		case FieldTypeCheckbox:
-//			field = &CheckboxField{BaseField: baseField}
-//		case FieldTypePerson:
-//			field = &PersonField{BaseField: baseField}
-//		case FieldTypeMedia:
-//			field = &MediaField{BaseField: baseField}
-//		case FieldTypeUrl:
-//			field = &UrlField{BaseField: baseField}
-//		case FieldTypeUpdatedTime:
-//			field = &UpdatedTimeField{BaseField: baseField}
-//		default:
-//		}
-//		if field != nil {
-//			result[baseField.name] = field
-//		}
-//	}
-//	if checkFields != nil {
-//		for fieldName, fieldType := range checkFields {
-//			if tmp, ok := result[fieldName]; !ok {
-//				log.FatalLog("field with name \"%s\" is not defined", fieldName)
-//			} else if tmp.Type() != fieldType {
-//				log.FatalLog("field with name \"%s\" expect type %s, actual type %s",
-//					fieldName, fieldTypeStr(fieldType), fieldTypeStr(tmp.Type()))
-//			}
-//		}
-//	}
-//	return result
-//}
-
 //func (c *Client) SearchRecords(fields map[string]IField, limit int, filters ...*larkbitable.Condition) []*Record {
 //	if limit == -1 {
 //		limit = 5000
@@ -120,51 +55,7 @@ package larkbase
 //	sort.Strings(ret)
 //	return ret
 //}
-//func (c *Client) searchRecords(fields map[string]IField, pageToken string, pageSize int, filters ...*larkbitable.Condition) ([]*Record, string) {
-//	if fields == nil {
-//		fields = c.GetFields(nil)
-//	}
-//	fieldNames := sortedMapKeys(fields)
-//	bodyBuilder := larkbitable.NewSearchAppTableRecordReqBodyBuilder()
-//	bodyBuilder.FieldNames(fieldNames)
-//	if len(filters) > 0 {
-//		bodyBuilder.Filter(larkbitable.NewFilterInfoBuilder().
-//			Conjunction(`and`).
-//			Conditions(filters).
-//			Build())
-//	}
-//	bodyBuilder.AutomaticFields(true)
-//	req := larkbitable.NewSearchAppTableRecordReqBuilder().
-//		AppToken(c.appToken).
-//		TableId(c.table.Id).
-//		PageToken(pageToken).
-//		PageSize(pageSize).
-//		Body(bodyBuilder.Build()).Build()
-//	resp, err := c.Bitable.V1.AppTableRecord.Search(context.Background(), req)
-//	if err != nil {
-//		log.FatalLog("fail to call bitable search table: %v", err)
-//	}
-//	if !resp.Success() {
-//		log.FatalLog("unexpected response error: %s", larkcore.Prettify(resp.CodeError))
-//	}
-//	result := make([]*Record, 0)
-//	for _, item := range resp.Data.Items {
-//		record := &Record{
-//			Id:     *item.RecordId,
-//			Fields: make(map[string]IField),
-//		}
-//		for name, fi := range item.Fields {
-//			f := fields[name]
-//			field := f.Parse(fi)
-//			record.Fields[name] = field
-//		}
-//		result = append(result, record)
-//	}
-//	if *resp.Data.HasMore {
-//		return result, *resp.Data.PageToken
-//	}
-//	return result, ""
-//}
+
 //
 //func (c *Client) UpdateRecord(record *Record) {
 //	req := larkbitable.NewUpdateAppTableRecordReqBuilder().
