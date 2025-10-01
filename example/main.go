@@ -20,35 +20,41 @@ type Demo struct {
 	Check      larkbase.CheckboxField     `lark:"check"`
 }
 
+var (
+	larkAppId     = os.Getenv("LARK_APP_ID")
+	larkAppSecret = os.Getenv("LARK_APP_SECRET")
+)
+
 func main() {
 	demo := &Demo{}
-	conn, err := larkbase.Connect(os.Getenv("LARK_APP_ID"), os.Getenv("LARK_APP_SECRET"), demo)
+	conn, err := larkbase.Connect(larkAppId, larkAppSecret, demo)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	count, err := conn.CountRecords()
+	var record Demo
+	err = conn.FindOne(&record, demo.Name.FilterIs("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(count)
-
-	var records []Demo
-	err = conn.QueryRecords(&records, demo.Name.FilterIs("andy"))
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	s, err := larkbase.Marshal(records)
+	s, err := larkbase.Marshal(record)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	fmt.Println(s)
 
-	err = conn.QueryRecords(&records, demo.Name.FilterIsNot("andy"))
+	record.Age.Value = "123456"
+	err = conn.UpdateOne(&record)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	var records []Demo
+	err = conn.FindAll(&records, demo.Name.FilterIsNot("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -1,3 +1,5 @@
 package larkbase
 
-type Meta struct{}
+type Meta struct {
+	RecordId string
+}

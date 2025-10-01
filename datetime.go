@@ -22,6 +22,10 @@ func beijingDateTimeStrToUnixSeconds(s string) (int64, error) {
 	return t.Unix(), nil
 }
 
+func beijingDateTimeStrToTime(s string) (time.Time, error) {
+	return time.ParseInLocation(dateTimeLayout, s, beijingTZ)
+}
+
 func unixSecondsToBeijingDateTimeStr(timestamp int64) string {
 	return time.Unix(timestamp, 0).In(beijingTZ).Format(dateTimeLayout)
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	"github.com/lincaiyong/log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -172,6 +174,52 @@ func (f *Field) parseValue(v any) {
 		f.Value = v.(string)
 	case "Button":
 		f.Value = v.(string)
+	}
+}
+
+// https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/bitable-record-data-structure-overview
+func (f *Field) buildForLarkSuite() any {
+	switch f.Type {
+	case "AutoNumber":
+		return f.Value
+	case "Checkbox":
+		return map[string]bool{"1": true}[f.Value]
+	case "Date":
+		us, _ := beijingDateTimeStrToUnixSeconds(f.Value)
+		return us * 1000
+	case "Media":
+		items := strings.Split(f.Value, ",")
+		tmp := make([]any, len(items))
+		for i, sel := range items {
+			tmp[i] = map[string]string{
+				"file_token": sel,
+			}
+		}
+		return tmp
+	case "MultiSelect":
+		var items []string
+		_ = json.Unmarshal([]byte(f.Value), &items)
+		tmp := make([]any, len(items))
+		for i, sel := range items {
+			tmp[i] = sel
+		}
+		return tmp
+	case "Number":
+		ff, _ := strconv.ParseFloat(f.Value, 64)
+		return ff
+	case "SingleSelect", "Text":
+		return f.Value
+	case "ModifiedTime", "CreatedTime":
+		t, _ := beijingDateTimeStrToTime(f.Value)
+		return &t
+	case "Url":
+		return map[string]any{
+			"text": f.Value,
+			"link": f.Value,
+		}
+	default:
+		log.WarnLog("unsupported field type to build: %s, ignored", f.Type)
+		return nil
 	}
 }
 
