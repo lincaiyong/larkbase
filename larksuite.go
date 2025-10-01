@@ -57,7 +57,7 @@ func (c *Connection) queryRecordsByPage(filters []*larkbitable.Condition, pageTo
 		}
 		for name, fi := range item.Fields {
 			field := c.table.GetField(name)
-			field.parseValue(fi)
+			field.ParseFromLarkSuite(fi)
 			record.Fields[name] = field
 		}
 		records = append(records, record)
@@ -91,12 +91,19 @@ func (c *Connection) queryTableRecordByPage(pageToken string, total *int) (strin
 }
 
 func (c *Connection) updateRecord(record *Record) error {
+	fields, err := record.buildForLarkSuite()
+	if err != nil {
+		return err
+	}
+	if len(fields) == 0 {
+		return nil
+	}
 	req := larkbitable.NewUpdateAppTableRecordReqBuilder().
 		AppToken(c.table.appToken).
 		TableId(c.table.tableId).
 		RecordId(record.Id).
 		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
-			Fields(record.buildForLarkSuite()).
+			Fields(fields).
 			Build()).
 		Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.Update(context.Background(), req)

@@ -31,21 +31,21 @@ func marshalSliceOfRecord(arg any) (string, error) {
 
 func marshalRecord(recordValue reflect.Value) (map[string]string, error) {
 	m := make(map[string]string)
-	for j := 0; j < recordValue.NumField(); j++ {
-		fieldValue := recordValue.Field(j)
-		fieldType := fieldValue.Type()
-		if fieldType.Name() == "Meta" {
-			meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
-			m["_record_id"] = meta.RecordId
-			continue
-		}
-		f := fieldValue.Convert(reflect.TypeOf(Field{})).Interface().(Field)
-		n := f.Name
-		v := f.Value
-		if v != "" {
-			m[n] = v
-		}
-	}
+	//for j := 0; j < recordValue.NumField(); j++ {
+	//	fieldValue := recordValue.Field(j)
+	//	fieldType := fieldValue.Type()
+	//	if fieldType.Name() == "Meta" {
+	//		meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
+	//		m["_record_id"] = meta.RecordId
+	//		continue
+	//	}
+	//	f := fieldValue.Convert(reflect.TypeOf(Field{})).Interface().(Field)
+	//	n := f.Name()
+	//	v := f.Value()
+	//	if v != "" {
+	//		m[n] = v
+	//	}
+	//}
 	return m, nil
 }
 

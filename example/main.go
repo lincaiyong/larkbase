@@ -46,7 +46,7 @@ func main() {
 	}
 	fmt.Println(s)
 
-	record.Age.Value = "123456"
+	record.Age.SetValue("123456")
 	err = conn.UpdateOne(&record)
 	if err != nil {
 		fmt.Println(err)

@@ -4,8 +4,8 @@ func NewTable(url string, appToken string, tableId string, fields []Field) *Tabl
 	fieldNames := make([]string, len(fields))
 	fieldMap := make(map[string]Field, len(fields))
 	for i, f := range fields {
-		fieldNames[i] = f.Name
-		fieldMap[f.Name] = f
+		fieldNames[i] = f.Name()
+		fieldMap[f.Name()] = f
 	}
 	return &Table{
 		tableUrl:   url,

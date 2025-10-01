@@ -19,7 +19,7 @@ func extractAppTokenTableIdFromUrl(url string) (string, string) {
 }
 
 func convertToFieldType(s string) string {
-	return s[len("larkbase.") : len(s)-len("Field")] // a little bit hacking
+	return s[len("field.") : len(s)-len("Field")] // a little bit hacking
 }
 
 func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
@@ -30,10 +30,10 @@ func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
 	fields := make([]Field, 0)
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
-		field := structValue.Field(i).Addr().Convert(reflect.TypeOf(&Field{})).Interface().(*Field)
-		field.Name = structField.Tag.Get("lark")
-		field.Type = convertToFieldType(structField.Type.String())
-		fields = append(fields, *field)
+		field := structValue.Field(i).Addr().Interface().(Field)
+		field.SetName(structField.Tag.Get("lark"))
+		field.SetType(convertToFieldType(structField.Type.String()))
+		fields = append(fields, field)
 	}
 	table = NewTable(tableUrl, appToken, tableId, fields)
 	return
@@ -59,7 +59,7 @@ func checkUserStructType(structType reflect.Type) error {
 	for i := 1; i < structType.NumField(); i++ {
 		structField := structType.Field(i)
 		typeName := structField.Type.String()
-		if !strings.HasPrefix(typeName, "larkbase.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
+		if !strings.HasPrefix(typeName, "field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
 			return fmt.Errorf("field type of user struct should be larbase.XxxField, got %s", typeName)
 		}
 		tag := structField.Tag.Get("lark")
@@ -116,7 +116,7 @@ func convertUserStructToRecord(structPtr any) (record *Record, err error) {
 			continue
 		}
 		tag := structField.Tag.Get("lark")
-		field := fieldValue.Convert(reflect.TypeOf(Field{})).Interface().(Field)
+		field := fieldValue.Addr().Interface().(Field)
 		record.Fields[tag] = field
 	}
 	return
@@ -144,10 +144,15 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 			continue
 		}
 		tag := structField.Tag.Get("lark")
-		value := record.Fields[tag].Value
-		fieldValueAsField := fieldValue.Addr().Convert(reflect.TypeOf(&Field{})).Interface().(*Field)
-		fieldValueAsField.Name = tag
-		fieldValueAsField.Value = value
+		f, ok := record.Fields[tag]
+		if !ok {
+			continue
+		}
+		value := f.Value()
+		fieldValueAsField := fieldValue.Addr().Interface().(Field)
+		fieldValueAsField.SetName(tag)
+		fieldValueAsField.SetType(convertToFieldType(structField.Type.String()))
+		fieldValueAsField.SetValueNoDirty(value)
 	}
 	return nil
 }

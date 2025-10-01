@@ -9,12 +9,16 @@ type Record struct {
 	Fields map[string]Field
 }
 
-func (r *Record) buildForLarkSuite() map[string]any {
+func (r *Record) buildForLarkSuite() (map[string]any, error) {
 	fields := make(map[string]any)
 	for name, field := range r.Fields {
-		if field.Value != "" {
-			fields[name] = field.buildForLarkSuite()
+		if field.Dirty() {
+			var err error
+			fields[name], err = field.BuildForLarkSuite()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-	return fields
+	return fields, nil
 }
