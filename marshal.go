@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-func marshalSliceOfRecord(arg any) (string, error) {
+func marshalSliceOfUserStruct(arg any) (string, error) {
 	sliceValue := reflect.ValueOf(arg)
 	s := make([]map[string]string, 0)
 	for i := 0; i < sliceValue.Len(); i++ {
@@ -14,9 +14,9 @@ func marshalSliceOfRecord(arg any) (string, error) {
 		var m map[string]string
 		var err error
 		if elemValue.Kind() == reflect.Struct {
-			m, err = marshalRecord(elemValue)
+			m, err = marshalUserStruct(elemValue)
 		} else if elemValue.Kind() == reflect.Ptr {
-			m, err = marshalRecord(elemValue.Elem())
+			m, err = marshalUserStruct(elemValue.Elem())
 		} else {
 			return "", fmt.Errorf("invalid argument: %v", arg)
 		}
@@ -29,37 +29,40 @@ func marshalSliceOfRecord(arg any) (string, error) {
 	return string(b), nil
 }
 
-func marshalRecord(recordValue reflect.Value) (map[string]string, error) {
+func marshalUserStruct(structValue reflect.Value) (map[string]string, error) {
 	m := make(map[string]string)
-	//for j := 0; j < recordValue.NumField(); j++ {
-	//	fieldValue := recordValue.Field(j)
-	//	fieldType := fieldValue.Type()
-	//	if fieldType.Name() == "Meta" {
-	//		meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
-	//		m["_record_id"] = meta.RecordId
-	//		continue
-	//	}
-	//	f := fieldValue.Convert(reflect.TypeOf(Field{})).Interface().(Field)
-	//	n := f.Name()
-	//	v := f.Value()
-	//	if v != "" {
-	//		m[n] = v
-	//	}
-	//}
+	for j := 0; j < structValue.NumField(); j++ {
+		fieldValue := structValue.Field(j)
+		fieldType := fieldValue.Type()
+		if fieldType.Name() == "Meta" {
+			meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
+			m["_record_id"] = meta.RecordId
+			continue
+		}
+		if fieldValue.IsNil() {
+			continue
+		}
+		field := fieldValue.Interface().(Field)
+		n := field.Name()
+		v := field.Value()
+		if v != "" {
+			m[n] = v
+		}
+	}
 	return m, nil
 }
 
 func Marshal(obj any) (string, error) {
 	objType := reflect.TypeOf(obj)
 	if objType.Kind() == reflect.Slice {
-		return marshalSliceOfRecord(obj)
+		return marshalSliceOfUserStruct(obj)
 	}
 	var m map[string]string
 	var err error
 	if objType.Kind() == reflect.Ptr {
-		m, err = marshalRecord(reflect.ValueOf(obj).Elem())
+		m, err = marshalUserStruct(reflect.ValueOf(obj).Elem())
 	} else if objType.Kind() == reflect.Struct {
-		m, err = marshalRecord(reflect.ValueOf(obj))
+		m, err = marshalUserStruct(reflect.ValueOf(obj))
 	} else {
 		return "", fmt.Errorf("invalid argument: %v", obj)
 	}

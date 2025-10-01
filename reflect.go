@@ -19,7 +19,7 @@ func extractAppTokenTableIdFromUrl(url string) (string, string) {
 }
 
 func convertToFieldType(s string) string {
-	return s[len("field.") : len(s)-len("Field")] // a little bit hacking
+	return s[len("*field.") : len(s)-len("Field")] // a little bit hacking
 }
 
 func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
@@ -30,10 +30,12 @@ func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
 	fields := make([]Field, 0)
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
-		field := structValue.Field(i).Addr().Interface().(Field)
+		fieldValue := structValue.Field(i)
+		field := reflect.New(structField.Type.Elem()).Interface().(Field)
 		field.SetName(structField.Tag.Get("lark"))
 		field.SetType(convertToFieldType(structField.Type.String()))
 		fields = append(fields, field)
+		fieldValue.Set(reflect.ValueOf(field))
 	}
 	table = NewTable(tableUrl, appToken, tableId, fields)
 	return
@@ -59,7 +61,7 @@ func checkUserStructType(structType reflect.Type) error {
 	for i := 1; i < structType.NumField(); i++ {
 		structField := structType.Field(i)
 		typeName := structField.Type.String()
-		if !strings.HasPrefix(typeName, "field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
+		if !strings.HasPrefix(typeName, "*field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Ptr {
 			return fmt.Errorf("field type of user struct should be larbase.XxxField, got %s", typeName)
 		}
 		tag := structField.Tag.Get("lark")
@@ -115,8 +117,11 @@ func convertUserStructToRecord(structPtr any) (record *Record, err error) {
 			record.Id = fieldValue.Interface().(Meta).RecordId
 			continue
 		}
+		if fieldValue.IsNil() {
+			continue
+		}
 		tag := structField.Tag.Get("lark")
-		field := fieldValue.Addr().Interface().(Field)
+		field := fieldValue.Interface().(Field)
 		record.Fields[tag] = field
 	}
 	return
@@ -149,10 +154,11 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 			continue
 		}
 		value := f.Value()
-		fieldValueAsField := fieldValue.Addr().Interface().(Field)
-		fieldValueAsField.SetName(tag)
-		fieldValueAsField.SetType(convertToFieldType(structField.Type.String()))
-		fieldValueAsField.SetValueNoDirty(value)
+		field := reflect.New(structField.Type.Elem()).Interface().(Field)
+		field.SetName(tag)
+		field.SetType(convertToFieldType(structField.Type.String()))
+		field.SetValueNoDirty(value)
+		fieldValue.Set(reflect.ValueOf(field))
 	}
 	return nil
 }
