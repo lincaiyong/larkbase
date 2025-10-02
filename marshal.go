@@ -44,7 +44,7 @@ func marshalUserStruct(structValue reflect.Value) (map[string]string, error) {
 		}
 		field := fieldValue.Interface().(Field)
 		n := field.Name()
-		v := field.Value()
+		v := field.StringValue()
 		if v != "" {
 			m[n] = v
 		}

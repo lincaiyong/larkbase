@@ -5,13 +5,14 @@ type Field interface {
 	SetName(string)
 	Type() string
 	SetType(string)
-	Value() string
-	SetValue(string)
-	SetValueNoDirty(string)
+	UnderlayValue() any
+	SetUnderlayValue(any)
+	SetUnderlayValueNoDirty(any)
 	Dirty() bool
+	StringValue() string
 
 	Fork() Field
 
-	ParseFromLarkSuite(v any)
-	BuildForLarkSuite() (any, error)
+	Parse(v any)
+	Build() any
 }

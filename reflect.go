@@ -151,11 +151,11 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 		if !ok {
 			continue
 		}
-		value := f.Value()
+		value := f.UnderlayValue()
 		field := reflect.New(structField.Type.Elem()).Interface().(Field)
 		field.SetName(tag)
 		field.SetType(convertToFieldType(structField.Type.String()))
-		field.SetValueNoDirty(value)
+		field.SetUnderlayValueNoDirty(value)
 		fieldValue.Set(reflect.ValueOf(field))
 	}
 	return nil

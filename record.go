@@ -13,11 +13,7 @@ func (r *Record) buildForLarkSuite() (map[string]any, error) {
 	fields := make(map[string]any)
 	for name, field := range r.Fields {
 		if field.Dirty() {
-			var err error
-			fields[name], err = field.BuildForLarkSuite()
-			if err != nil {
-				return nil, err
-			}
+			fields[name] = field.Build()
 		}
 	}
 	return fields, nil

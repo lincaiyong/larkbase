@@ -1,5 +1,5 @@
 package field
 
-type PersonField struct {
+type WorkflowField struct {
 	BaseField
 }

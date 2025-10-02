@@ -1,3 +1,5 @@
 package field
 
-type PhoneField TextField
+type PhoneField struct {
+	BaseField
+}

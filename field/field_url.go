@@ -1,3 +1,5 @@
 package field
 
-type UrlField TextField
+type UrlField struct {
+	BaseField
+}

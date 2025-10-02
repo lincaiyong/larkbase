@@ -1,3 +1,5 @@
 package field
 
-type MultiSelectField TextField
+type MultiSelectField struct {
+	BaseField
+}

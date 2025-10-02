@@ -1,3 +1,5 @@
 package field
 
-type SingleSelectField TextField
+type SingleSelectField struct {
+	BaseField
+}

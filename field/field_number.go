@@ -1,9 +1,19 @@
 package field
 
-import larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+import (
+	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+)
 
 type NumberField struct {
 	BaseField
+}
+
+func (f *NumberField) SetIntValue(v int) {
+	f.SetUnderlayValue(float64(v))
+}
+
+func (f *NumberField) SetValue(v float64) {
+	f.SetUnderlayValue(v)
 }
 
 func (f *NumberField) Is(value string) *larkbitable.Condition {

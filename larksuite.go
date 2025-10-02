@@ -54,9 +54,9 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 			Id:     *item.RecordId,
 			Fields: make(map[string]Field),
 		}
-		for name, fi := range item.Fields {
+		for name, value := range item.Fields {
 			field := c.fieldMap[name].Fork()
-			field.ParseFromLarkSuite(fi)
+			field.Parse(value)
 			record.Fields[name] = field
 		}
 		records = append(records, record)
