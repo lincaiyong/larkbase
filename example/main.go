@@ -46,7 +46,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	s, err := larkbase.Marshal(record)
+	s, err := conn.MarshalRecord(&record)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -61,16 +61,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	var records []DemoRecord
+	var records []*DemoRecord
 	err = conn.FindAll(&records, conn.Filter().Name.IsNot("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	s, err = larkbase.Marshal(records)
+	s, err = conn.MarshalRecords(records)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	fmt.Println(s)
+
+	for _, r := range records {
+		r.Date.SetValue(time.Now())
+	}
+	err = conn.UpdateAll(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

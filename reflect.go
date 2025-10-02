@@ -23,7 +23,7 @@ func convertToFieldType(s string) string {
 	return s[len("field.") : len(s)-len("Field")] // a little bit hacking
 }
 
-func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId string, fields []Field, err error) {
+func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	metaField := structValue.Type().Field(0)
 	tableUrl = metaField.Tag.Get("lark")
@@ -40,11 +40,7 @@ func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId st
 	return
 }
 
-func checkUserStructType(structType reflect.Type) error {
-	// TODO: cache
-	if structType.Kind() != reflect.Struct {
-		return fmt.Errorf("structPtr is not a pointer to struct, got %s", structType.Kind().String())
-	}
+func (c *Connection[T]) checkStructType(structType reflect.Type) error {
 	if structType.NumField() == 0 {
 		return fmt.Errorf("user struct has no field")
 	}
@@ -71,36 +67,21 @@ func checkUserStructType(structType reflect.Type) error {
 	return nil
 }
 
-func checkUserStructPtr(structPtr any) error {
-	structPtrValue := reflect.ValueOf(structPtr)
-	if structPtrValue.Kind() != reflect.Ptr {
-		return fmt.Errorf("structPtr is not a pointer to struct, got %T", structPtr)
-	}
-	return checkUserStructType(structPtrValue.Elem().Type())
+func (c *Connection[T]) checkStructPtr(structPtr *T) error {
+	return c.checkStructType(reflect.TypeOf(structPtr).Elem())
 }
 
-func checkUserStructSlicePtr(structSlicePtr any) error {
-	structSlicePtrType := reflect.TypeOf(structSlicePtr)
-	if structSlicePtrType.Kind() != reflect.Ptr {
-		return fmt.Errorf("structPtr is not a pointer to slice of struct, got %T", structSlicePtr)
-	}
-	structSliceType := structSlicePtrType.Elem()
-	if structSliceType.Kind() != reflect.Slice {
-		return fmt.Errorf("structPtr is not a pointer to slice of struct, got %T", structSlicePtr)
-	}
-	return checkUserStructType(structSliceType.Elem())
+func (c *Connection[T]) checkStructPtrSlicePtr(structPtrSlicePtr *[]*T) error {
+	return c.checkStructType(reflect.TypeOf(structPtrSlicePtr).Elem().Elem().Elem())
 }
 
-func convertUserStructToRecord(structPtr any) (record *Record, err error) {
+func (c *Connection[T]) checkStructPtrSlice(structPtrSlice []*T) error {
+	structSliceType := reflect.TypeOf(structPtrSlice)
+	return c.checkStructType(structSliceType.Elem().Elem())
+}
+
+func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, err error) {
 	structPtrValue := reflect.ValueOf(structPtr)
-	if structPtrValue.Kind() != reflect.Ptr {
-		err = fmt.Errorf("structPtr is not a pointer to struct, got %T", structPtr)
-		return
-	}
-	if structPtrValue.IsNil() {
-		err = fmt.Errorf("structPtr is a nil pointer, expect address of a struct")
-		return
-	}
 	structValue := structPtrValue.Elem()
 	if structValue.Kind() != reflect.Struct {
 		err = fmt.Errorf("structPtr is not a pointer to struct, got %T", structPtr)
@@ -129,18 +110,20 @@ func convertUserStructToRecord(structPtr any) (record *Record, err error) {
 	return
 }
 
-func convertRecordToUserStruct(record *Record, structPtr any) error {
-	structPtrValue := reflect.ValueOf(structPtr)
-	if structPtrValue.Kind() != reflect.Ptr {
-		return fmt.Errorf("structPtr is not a pointer to struct, got %T", structPtr)
+func (c *Connection[T]) convertStructPtrSliceToRecords(structPtrSlice []*T) (records []*Record, err error) {
+	for _, structPtr := range structPtrSlice {
+		var record *Record
+		record, err = c.convertStructPtrToRecord(structPtr)
+		if err != nil {
+			return
+		}
+		records = append(records, record)
 	}
-	if structPtrValue.IsNil() {
-		return fmt.Errorf("structPtr is a nil pointer, expect address of a struct")
-	}
-	structValue := structPtrValue.Elem()
-	if structValue.Kind() != reflect.Struct {
-		return fmt.Errorf("structPtr is not a pointer to struct, got %T", structPtr)
-	}
+	return
+}
+
+func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) error {
+	structValue := reflect.ValueOf(structPtr).Elem()
 	structType := structValue.Type()
 	for i := 0; i < structValue.NumField(); i++ {
 		structField := structType.Field(i)
@@ -165,15 +148,15 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 	return nil
 }
 
-func convertRecordsToUserStructSlicePtr(records []*Record, structSlicePtr any) error {
-	structSlicePtrValue := reflect.ValueOf(structSlicePtr)
-	StructSliceValue := structSlicePtrValue.Elem()
-	newSlice := reflect.MakeSlice(StructSliceValue.Type(), len(records), len(records))
+func (c *Connection[T]) convertRecordsToStructPtrSlicePtr(records []*Record, structPtrSlicePtr *[]*T) error {
+	ret := make([]*T, len(records))
 	for i, record := range records {
-		if err := convertRecordToUserStruct(record, newSlice.Index(i).Addr().Interface()); err != nil {
+		structPtr := new(T)
+		if err := c.convertRecordToStructPtr(record, structPtr); err != nil {
 			return err
 		}
+		ret[i] = structPtr
 	}
-	StructSliceValue.Set(newSlice)
+	*structPtrSlicePtr = ret
 	return nil
 }

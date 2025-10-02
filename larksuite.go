@@ -23,6 +23,7 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 	return nil
 }
 
+// https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
 	if pageSize == 0 {
 		pageSize = 100
@@ -71,6 +72,7 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 	return records, "", nil
 }
 
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/update
 func (c *Connection[T]) updateRecord(record *Record) error {
 	fields, err := record.buildForLarkSuite()
 	if err != nil {
@@ -88,6 +90,41 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 			Build()).
 		Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.Update(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable update table: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	return nil
+}
+
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_update
+func (c *Connection[T]) updateRecords(records []*Record) error {
+	reqRecords := make([]*larkbitable.AppTableRecord, 0, len(records))
+	for _, record := range records {
+		fields, err := record.buildForLarkSuite()
+		if err != nil {
+			return err
+		}
+		if len(fields) == 0 {
+			continue
+		}
+		reqRecords = append(reqRecords, larkbitable.NewAppTableRecordBuilder().
+			Fields(fields).
+			RecordId(record.Id).
+			Build())
+	}
+	if len(reqRecords) == 0 {
+		return nil
+	}
+	req := larkbitable.NewBatchUpdateAppTableRecordReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		Body(larkbitable.NewBatchUpdateAppTableRecordReqBodyBuilder().
+			Records(reqRecords).
+			Build()).Build()
+	resp, err := c.client.Bitable.V1.AppTableRecord.BatchUpdate(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("fail to call bitable update table: %v", err)
 	}

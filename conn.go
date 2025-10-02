@@ -15,37 +15,26 @@ import (
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	structPtr := reflect.New(reflect.TypeOf((*T)(nil)).Elem()).Interface().(*T)
-	if err := checkUserStructPtr(structPtr); err != nil {
+	conn := &Connection[T]{filter: structPtr}
+	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
 	}
-	tableUrl, appToken, tableId, fields, err := extractTableAndFillBasicInfo(structPtr)
+	var err error
+	conn.tableUrl, conn.appToken, conn.tableId, conn.fields, err = conn.extractAndFillFilterInstance(structPtr)
 	if err != nil {
 		return nil, err
 	}
-	client := lark.NewClient(appId, appSecret)
+	conn.client = lark.NewClient(appId, appSecret)
 
-	var fieldNames []string
-	fieldMap := make(map[string]Field)
-	for _, structField := range fields {
-		fieldNames = append(fieldNames, structField.Name())
-		fieldMap[structField.Name()] = structField
+	conn.fieldMap = make(map[string]Field)
+	for _, structField := range conn.fields {
+		conn.fieldNames = append(conn.fieldNames, structField.Name())
+		conn.fieldMap[structField.Name()] = structField
 	}
-	conn := &Connection[T]{
-		client:     client,
-		filter:     structPtr,
-		tableUrl:   tableUrl,
-		appToken:   appToken,
-		tableId:    tableId,
-		fields:     fields,
-		fieldNames: fieldNames,
-		fieldMap:   fieldMap,
-	}
-
 	err = conn.checkFields()
 	if err != nil {
 		return nil, err
 	}
-
 	return conn, nil
 }
 
@@ -72,11 +61,13 @@ func (c *Connection[T]) IsNotFoundError(err error) bool {
 	return errors.Is(err, errorNotFound)
 }
 
-func (c *Connection[T]) FindOne(structPtr any, filters ...*larkbitable.Condition) error {
-	if err := checkUserStructPtr(structPtr); err != nil {
+func (c *Connection[T]) FindOne(structPtr *T, filters ...*larkbitable.Condition) error {
+	if structPtr == nil {
+		return errors.New("structPtr is nil")
+	}
+	if err := c.checkStructPtr(structPtr); err != nil {
 		return err
 	}
-
 	var err error
 	records := make([]*Record, 0)
 	records, _, err = c.queryRecordsByPage(filters, "", 1, records)
@@ -87,18 +78,20 @@ func (c *Connection[T]) FindOne(structPtr any, filters ...*larkbitable.Condition
 		return errorNotFound
 	}
 	record := records[0]
-	err = convertRecordToUserStruct(record, structPtr)
+	err = c.convertRecordToStructPtr(record, structPtr)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Connection[T]) FindAll(structSlicePtr any, filters ...*larkbitable.Condition) error {
-	if err := checkUserStructSlicePtr(structSlicePtr); err != nil {
+func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable.Condition) error {
+	if structPtrSlicePtr == nil {
+		return errors.New("structSlicePtr is nil")
+	}
+	if err := c.checkStructPtrSlicePtr(structPtrSlicePtr); err != nil {
 		return err
 	}
-
 	records := make([]*Record, 0)
 	if err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
 		records, newPageToken, err = c.queryRecordsByPage(filters, pageToken, 0, records)
@@ -106,18 +99,32 @@ func (c *Connection[T]) FindAll(structSlicePtr any, filters ...*larkbitable.Cond
 	}); err != nil {
 		return err
 	}
-	return convertRecordsToUserStructSlicePtr(records, structSlicePtr)
+	return c.convertRecordsToStructPtrSlicePtr(records, structPtrSlicePtr)
 }
 
-func (c *Connection[T]) UpdateOne(structPtr any) error {
-	if err := checkUserStructPtr(structPtr); err != nil {
+func (c *Connection[T]) UpdateOne(structPtr *T) error {
+	if structPtr == nil {
+		return errors.New("structPtr is nil")
+	}
+	if err := c.checkStructPtr(structPtr); err != nil {
 		return err
 	}
-	record, err := convertUserStructToRecord(structPtr)
+	record, err := c.convertStructPtrToRecord(structPtr)
 	if err != nil {
 		return err
 	}
 	return c.updateRecord(record)
+}
+
+func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
+	if err := c.checkStructPtrSlice(structPtrSlice); err != nil {
+		return err
+	}
+	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
+	if err != nil {
+		return err
+	}
+	return c.updateRecords(records)
 }
 
 func (c *Connection[T]) checkFields() error {

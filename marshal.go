@@ -2,36 +2,17 @@ package larkbase
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/lincaiyong/larkbase/field"
 	"reflect"
 )
 
-func marshalSliceOfUserStruct(arg any) (string, error) {
-	sliceValue := reflect.ValueOf(arg)
-	s := make([]map[string]any, 0)
-	for i := 0; i < sliceValue.Len(); i++ {
-		elemValue := sliceValue.Index(i)
-		var m map[string]any
-		var err error
-		if elemValue.Kind() == reflect.Struct {
-			m, err = marshalUserStruct(elemValue)
-		} else if elemValue.Kind() == reflect.Ptr {
-			m, err = marshalUserStruct(elemValue.Elem())
-		} else {
-			return "", fmt.Errorf("invalid argument: %v", arg)
-		}
-		if err != nil {
-			return "", err
-		}
-		s = append(s, m)
+func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]any, error) {
+	if structPtr == nil {
+		return nil, errors.New("structPtr is nil")
 	}
-	b, _ := json.MarshalIndent(s, "", "  ")
-	return string(b), nil
-}
-
-func marshalUserStruct(structValue reflect.Value) (map[string]any, error) {
 	m := make(map[string]any)
+	structValue := reflect.ValueOf(structPtr).Elem()
 	for j := 0; j < structValue.NumField(); j++ {
 		fieldValue := structValue.Field(j)
 		fieldType := fieldValue.Type()
@@ -51,20 +32,24 @@ func marshalUserStruct(structValue reflect.Value) (map[string]any, error) {
 	return m, nil
 }
 
-func Marshal(obj any) (string, error) {
-	objType := reflect.TypeOf(obj)
-	if objType.Kind() == reflect.Slice {
-		return marshalSliceOfUserStruct(obj)
+func (c *Connection[T]) MarshalRecords(structPtrSlice []*T) (string, error) {
+	s := make([]map[string]any, 0)
+	for _, structPtr := range structPtrSlice {
+		m, err := c.marshalStructPtr(structPtr)
+		if err != nil {
+			return "", err
+		}
+		s = append(s, m)
 	}
-	var m map[string]any
-	var err error
-	if objType.Kind() == reflect.Ptr {
-		m, err = marshalUserStruct(reflect.ValueOf(obj).Elem())
-	} else if objType.Kind() == reflect.Struct {
-		m, err = marshalUserStruct(reflect.ValueOf(obj))
-	} else {
-		return "", fmt.Errorf("invalid argument: %v", obj)
+	b, _ := json.MarshalIndent(s, "", "  ")
+	return string(b), nil
+}
+
+func (c *Connection[T]) MarshalRecord(structPtr *T) (string, error) {
+	if structPtr == nil {
+		return "", errors.New("structPtr is nil")
 	}
+	m, err := c.marshalStructPtr(structPtr)
 	if err != nil {
 		return "", err
 	}
