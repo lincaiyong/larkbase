@@ -1,3 +1,5 @@
 package larkfield
 
-type ButtonField struct{ BaseField }
+type ButtonField struct {
+	BaseField
+}

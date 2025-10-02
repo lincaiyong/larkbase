@@ -2,6 +2,7 @@ package larkbase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
@@ -21,6 +22,45 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 		}
 	}
 	return nil
+}
+
+func (c *Connection[T]) checkFields() error {
+	fields := make(map[string]larkfield.Type)
+	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
+		return c.queryFieldsByPage(pageToken, fields)
+	})
+	if err != nil {
+		return err
+	}
+	for name, structField := range c.fieldMap {
+		f, ok := fields[name]
+		if !ok {
+			return fmt.Errorf("field %s is not found in larkbase table: %s", name, c.tableUrl)
+		}
+		if structField.Type() != f.String() {
+			return fmt.Errorf("field %s in larkbase table %s has type %s, not %s", name, c.tableUrl, f.String(), structField.Type())
+		}
+	}
+	return nil
+}
+
+func (c *Connection[T]) parseAppTableRecord(item *larkbitable.AppTableRecord) (*Record, error) {
+	record := &Record{
+		Id:     *item.RecordId,
+		Fields: make(map[string]larkfield.Field),
+	}
+	if item.LastModifiedTime != nil {
+		record.ModifiedTime = larkfield.UnixSecondsToTime((*item.LastModifiedTime) / 1000)
+	}
+	for name, value := range item.Fields {
+		structField := c.fieldMap[name].Fork()
+		err := structField.Parse(value)
+		if err != nil {
+			return nil, err
+		}
+		record.Fields[name] = structField
+	}
+	return record, nil
 }
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
@@ -52,18 +92,10 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 		return nil, "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	for _, item := range resp.Data.Items {
-		record := &Record{
-			Id:           *item.RecordId,
-			ModifiedTime: larkfield.UnixSecondsToTime((*item.LastModifiedTime) / 1000),
-			Fields:       make(map[string]larkfield.Field),
-		}
-		for name, value := range item.Fields {
-			structField := c.fieldMap[name].Fork()
-			err = structField.Parse(value)
-			if err != nil {
-				return nil, "", err
-			}
-			record.Fields[name] = structField
+		var record *Record
+		record, err = c.parseAppTableRecord(item)
+		if err != nil {
+			return nil, "", err
 		}
 		records = append(records, record)
 	}
@@ -158,4 +190,35 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 		return *resp.Data.PageToken, nil
 	}
 	return "", nil
+}
+
+func (c *Connection[T]) addRecord(record *Record) error {
+	fields, err := record.buildForLarkSuite()
+	if err != nil {
+		return err
+	}
+	if len(fields) == 0 {
+		return errors.New("empty fields")
+	}
+	req := larkbitable.NewCreateAppTableRecordReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
+			Fields(fields).
+			Build()).
+		Build()
+	resp, err := c.client.Bitable.V1.AppTableRecord.Create(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable create record: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	var r *Record
+	r, err = c.parseAppTableRecord(resp.Data.Record)
+	if err != nil {
+		return err
+	}
+	*record = *r
+	return nil
 }

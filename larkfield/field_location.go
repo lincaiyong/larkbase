@@ -1,3 +1,5 @@
 package larkfield
 
-type LocationField struct{ BaseField }
+type LocationField struct {
+	BaseField
+}

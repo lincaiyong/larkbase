@@ -1,3 +1,5 @@
 package larkfield
 
-type GroupField struct{ BaseField }
+type GroupField struct {
+	BaseField
+}

@@ -2,7 +2,6 @@ package larkbase
 
 import (
 	"errors"
-	"fmt"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	"github.com/lincaiyong/larkbase/larkfield"
@@ -64,7 +63,7 @@ func (c *Connection[T]) FindOne(structPtr *T, filters ...*larkbitable.Condition)
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
-	if err := c.checkStructPtr(structPtr); err != nil {
+	if err := c.fillStructPtr(structPtr); err != nil {
 		return err
 	}
 	var err error
@@ -88,7 +87,7 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable
 	if structPtrSlicePtr == nil {
 		return errors.New("structSlicePtr is nil")
 	}
-	if err := c.checkStructPtrSlicePtr(structPtrSlicePtr); err != nil {
+	if err := c.fillStructPtrSlicePtr(*structPtrSlicePtr); err != nil {
 		return err
 	}
 	records := make([]*Record, 0)
@@ -105,7 +104,7 @@ func (c *Connection[T]) UpdateOne(structPtr *T) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
-	if err := c.checkStructPtr(structPtr); err != nil {
+	if err := c.fillStructPtr(structPtr); err != nil {
 		return err
 	}
 	record, err := c.convertStructPtrToRecord(structPtr)
@@ -116,7 +115,7 @@ func (c *Connection[T]) UpdateOne(structPtr *T) error {
 }
 
 func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
-	if err := c.checkStructPtrSlice(structPtrSlice); err != nil {
+	if err := c.fillStructPtrSlicePtr(structPtrSlice); err != nil {
 		return err
 	}
 	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
@@ -126,24 +125,18 @@ func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
 	return c.updateRecords(records)
 }
 
-func (c *Connection[T]) checkFields() error {
-	fields := make(map[string]larkfield.Type)
-	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		return c.queryFieldsByPage(pageToken, fields)
-	})
+func (c *Connection[T]) AddOne(structPtr *T) error {
+	if structPtr == nil {
+		return errors.New("structPtr is nil")
+	}
+	if err := c.fillStructPtr(structPtr); err != nil {
+		return err
+	}
+	record, err := c.convertStructPtrToRecord(structPtr)
 	if err != nil {
 		return err
 	}
-	for name, structField := range c.fieldMap {
-		f, ok := fields[name]
-		if !ok {
-			return fmt.Errorf("field %s is not found in larkbase table: %s", name, c.tableUrl)
-		}
-		if structField.Type() != f.String() {
-			return fmt.Errorf("field %s in larkbase table %s has type %s, not %s", name, c.tableUrl, f.String(), structField.Type())
-		}
-	}
-	return nil
+	return c.addRecord(record)
 }
 
 //
@@ -163,23 +156,7 @@ func (c *Connection[T]) checkFields() error {
 //	}
 //}
 //
-//func (c *Client) AddRecord(fields map[string]IField) {
-//	record := Record{Fields: fields}
-//	req := larkbitable.NewCreateAppTableRecordReqBuilder().
-//		AppToken(c.appToken).
-//		TableId(c.table.Id).
-//		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
-//			Fields(record.Build()).
-//			Build()).
-//		Build()
-//	resp, err := c.Bitable.V1.AppTableRecord.Create(context.Background(), req)
-//	if err != nil {
-//		log.FatalLog("fail to call bitable create record: %v", err)
-//	}
-//	if !resp.Success() {
-//		log.FatalLog("unexpected response error: %s", larkcore.Prettify(resp.CodeError))
-//	}
-//}
+
 //
 //func (c *Client) UploadFile(filePath string) string {
 //	stat, err := os.Stat(filePath)

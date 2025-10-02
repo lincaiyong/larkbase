@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+func (c *Connection[T]) convertToHack(fieldValue reflect.Value) larkfield.HackBaseField {
+	baseFieldPtr := fieldValue.Field(0)
+	return baseFieldPtr.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
+}
+
 func extractAppTokenTableIdFromUrl(url string) (string, string) {
 	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)`)
 	match := re.FindStringSubmatch(url)
@@ -27,19 +32,40 @@ func convertToFieldType(s string) string {
 
 func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []larkfield.Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
-	metaField := structValue.Type().Field(0)
+	structType := structValue.Type()
+	metaField := structType.Field(0)
 	tableUrl = metaField.Tag.Get("lark")
 	appToken, tableId = extractAppTokenTableIdFromUrl(tableUrl)
-	for i := 1; i < structValue.NumField(); i++ {
-		structField := structValue.Type().Field(i)
+	err = c.fillStructPtr(structPtr)
+	for i := 1; i < structType.NumField(); i++ {
 		fieldValue := structValue.Field(i)
-		field := reflect.New(structField.Type).Interface().(larkfield.Field)
-		field.SetName(structField.Tag.Get("lark"))
-		field.SetType(convertToFieldType(structField.Type.String()))
+		field := fieldValue.Addr().Interface().(larkfield.Field)
 		fields = append(fields, field)
-		fieldValue.Set(reflect.ValueOf(field).Elem())
 	}
 	return
+}
+
+func (c *Connection[T]) fillStructPtr(structPtr *T) error {
+	structValue := reflect.ValueOf(structPtr).Elem()
+	structType := structValue.Type()
+	for i := 1; i < structValue.NumField(); i++ {
+		structField := structType.Field(i)
+		fieldValue := structValue.Field(i)
+		field := fieldValue.Addr().Interface().(larkfield.Field)
+		field.SetName(structField.Tag.Get("lark"))
+		field.SetType(convertToFieldType(structField.Type.String()))
+	}
+	return nil
+}
+
+func (c *Connection[T]) fillStructPtrSlicePtr(structPtrSlicePtr []*T) error {
+	for _, structPtr := range structPtrSlicePtr {
+		err := c.fillStructPtr(structPtr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Connection[T]) checkStructType(structType reflect.Type) error {
@@ -101,8 +127,7 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 			record.ModifiedTime = meta.ModifiedTime
 			continue
 		}
-		baseField := fieldValue.Field(0)
-		hack := baseField.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
+		hack := c.convertToHack(fieldValue)
 		field := reflect.New(structField.Type).Interface().(larkfield.Field)
 		tag := structField.Tag.Get("lark")
 		field.SetName(hack.Name())

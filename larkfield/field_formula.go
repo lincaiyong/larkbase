@@ -1,3 +1,5 @@
 package larkfield
 
-type FormulaField struct{ BaseField }
+type FormulaField struct {
+	BaseField
+}

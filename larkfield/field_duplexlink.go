@@ -1,3 +1,5 @@
 package larkfield
 
-type DuplexLinkField struct{ BaseField }
+type DuplexLinkField struct {
+	BaseField
+}

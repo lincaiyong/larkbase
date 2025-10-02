@@ -6,6 +6,10 @@ type TextField struct {
 	BaseField
 }
 
+func (f *TextField) SetValue(v string) {
+	f.SetUnderlayValue(v)
+}
+
 func (f *TextField) Is(value string) *larkbitable.Condition {
 	return filterIs(f.name, value)
 }

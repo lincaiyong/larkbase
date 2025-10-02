@@ -40,13 +40,27 @@ func main() {
 		os.Exit(1)
 	}
 
+	var r DemoRecord
+	r.Name.SetValue("test")
+	err = conn.AddOne(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	s, err := conn.MarshalRecord(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+
 	var record DemoRecord
 	err = conn.FindOne(&record, conn.Filter().Name.Is("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	s, err := conn.MarshalRecord(&record)
+	s, err = conn.MarshalRecord(&record)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
