@@ -31,11 +31,11 @@ func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId st
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
 		fieldValue := structValue.Field(i)
-		field := reflect.New(structField.Type).Interface().(Field)
-		field.SetName(structField.Tag.Get("lark"))
-		field.SetType(convertToFieldType(structField.Type.String()))
-		fields = append(fields, field)
-		fieldValue.Set(reflect.ValueOf(field).Elem())
+		f := reflect.New(structField.Type).Interface().(Field)
+		f.SetName(structField.Tag.Get("lark"))
+		f.SetType(convertToFieldType(structField.Type.String()))
+		fields = append(fields, f)
+		fieldValue.Set(reflect.ValueOf(f).Elem())
 	}
 	return
 }
@@ -156,11 +156,11 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 			continue
 		}
 		value := f.UnderlayValue()
-		field := reflect.New(structField.Type).Interface().(Field)
-		field.SetName(tag)
-		field.SetType(convertToFieldType(structField.Type.String()))
-		field.SetUnderlayValueNoDirty(value)
-		fieldValue.Set(reflect.ValueOf(field).Elem())
+		ff := reflect.New(structField.Type).Interface().(Field)
+		ff.SetName(tag)
+		ff.SetType(convertToFieldType(structField.Type.String()))
+		ff.SetUnderlayValueNoDirty(value)
+		fieldValue.Set(reflect.ValueOf(ff).Elem())
 	}
 	return nil
 }
