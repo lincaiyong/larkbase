@@ -42,7 +42,8 @@ func main() {
 
 	var r DemoRecord
 	r.Name.SetValue("test")
-	err = conn.Create(&r)
+	//err = conn.Create(&r)
+	err = conn.CreateAll([]*DemoRecord{&r, &r})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -60,7 +61,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	
+
 	err = conn.Delete(&r)
 	if err != nil {
 		fmt.Println(err)

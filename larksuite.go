@@ -195,6 +195,7 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 	return "", nil
 }
 
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/create
 func (c *Connection[T]) createRecord(record *Record) error {
 	fields, err := record.buildForLarkSuite()
 	if err != nil {
@@ -223,6 +224,45 @@ func (c *Connection[T]) createRecord(record *Record) error {
 		return err
 	}
 	record.Id = r.Id
+	return nil
+}
+
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_create
+func (c *Connection[T]) createRecords(records []*Record) error {
+	reqRecords := make([]*larkbitable.AppTableRecord, 0, len(records))
+	for _, record := range records {
+		fields, err := record.buildForLarkSuite()
+		if err != nil {
+			return err
+		}
+		if len(fields) == 0 {
+			continue
+		}
+		reqRecords = append(reqRecords, larkbitable.NewAppTableRecordBuilder().
+			Fields(fields).
+			Build())
+	}
+	if len(reqRecords) == 0 {
+		return fmt.Errorf("empty records")
+	}
+	req := larkbitable.NewBatchCreateAppTableRecordReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		Body(larkbitable.NewBatchCreateAppTableRecordReqBodyBuilder().Records(reqRecords).Build()).
+		Build()
+	resp, err := c.client.Bitable.V1.AppTableRecord.BatchCreate(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable create record: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	//var r *Record
+	//r, err = c.parseAppTableRecord(resp.Data.Records)
+	//if err != nil {
+	//	return err
+	//}
+	//record.Id = r.Id
 	return nil
 }
 

@@ -87,7 +87,7 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable
 	if structPtrSlicePtr == nil {
 		return errors.New("structSlicePtr is nil")
 	}
-	if err := c.fillStructPtrSlicePtr(*structPtrSlicePtr); err != nil {
+	if err := c.fillStructPtrSlice(*structPtrSlicePtr); err != nil {
 		return err
 	}
 	records := make([]*Record, 0)
@@ -115,7 +115,7 @@ func (c *Connection[T]) Update(structPtr *T) error {
 }
 
 func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
-	if err := c.fillStructPtrSlicePtr(structPtrSlice); err != nil {
+	if err := c.fillStructPtrSlice(structPtrSlice); err != nil {
 		return err
 	}
 	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
@@ -141,6 +141,21 @@ func (c *Connection[T]) Create(structPtr *T) error {
 		return err
 	}
 	return c.convertRecordToStructPtr(record, structPtr)
+}
+
+func (c *Connection[T]) CreateAll(structPtrSlice []*T) error {
+	if err := c.fillStructPtrSlice(structPtrSlice); err != nil {
+		return err
+	}
+	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
+	if err != nil {
+		return err
+	}
+	err = c.createRecords(records)
+	if err != nil {
+		return err
+	}
+	return c.convertRecordsToStructPtrSlicePtr(records, &structPtrSlice)
 }
 
 func (c *Connection[T]) Delete(structPtr *T) error {

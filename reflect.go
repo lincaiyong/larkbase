@@ -58,7 +58,7 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 	return nil
 }
 
-func (c *Connection[T]) fillStructPtrSlicePtr(structPtrSlicePtr []*T) error {
+func (c *Connection[T]) fillStructPtrSlice(structPtrSlicePtr []*T) error {
 	for _, structPtr := range structPtrSlicePtr {
 		err := c.fillStructPtr(structPtr)
 		if err != nil {
