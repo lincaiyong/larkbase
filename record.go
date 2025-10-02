@@ -1,6 +1,9 @@
 package larkbase
 
-import "time"
+import (
+	"github.com/lincaiyong/larkbase/larkfield"
+	"time"
+)
 
 func NewRecord() *Record {
 	return new(Record)
@@ -8,7 +11,7 @@ func NewRecord() *Record {
 
 type Record struct {
 	Id     string
-	Fields map[string]Field
+	Fields map[string]larkfield.Field
 
 	CreatedTime  time.Time
 	ModifiedTime time.Time

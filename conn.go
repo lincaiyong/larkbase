@@ -25,7 +25,7 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	}
 	conn.client = lark.NewClient(appId, appSecret)
 
-	conn.fieldMap = make(map[string]Field)
+	conn.fieldMap = make(map[string]larkfield.Field)
 	for _, structField := range conn.fields {
 		conn.fieldNames = append(conn.fieldNames, structField.Name())
 		conn.fieldMap[structField.Name()] = structField
@@ -45,9 +45,9 @@ type Connection[T any] struct {
 	tableUrl   string
 	appToken   string
 	tableId    string
-	fields     []Field
+	fields     []larkfield.Field
 	fieldNames []string
-	fieldMap   map[string]Field
+	fieldMap   map[string]larkfield.Field
 }
 
 func (c *Connection[T]) Filter() *T {

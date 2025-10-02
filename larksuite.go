@@ -54,7 +54,7 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 	for _, item := range resp.Data.Items {
 		record := &Record{
 			Id:     *item.RecordId,
-			Fields: make(map[string]Field),
+			Fields: make(map[string]larkfield.Field),
 		}
 		for name, value := range item.Fields {
 			structField := c.fieldMap[name].Fork()

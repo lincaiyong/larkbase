@@ -25,7 +25,7 @@ func convertToFieldType(s string) string {
 	return s[len("larkfield.") : len(s)-len("Field")] // a little bit hacking
 }
 
-func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []Field, err error) {
+func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []larkfield.Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	metaField := structValue.Type().Field(0)
 	tableUrl = metaField.Tag.Get("lark")
@@ -33,7 +33,7 @@ func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, ap
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
 		fieldValue := structValue.Field(i)
-		field := reflect.New(structField.Type).Interface().(Field)
+		field := reflect.New(structField.Type).Interface().(larkfield.Field)
 		field.SetName(structField.Tag.Get("lark"))
 		field.SetType(convertToFieldType(structField.Type.String()))
 		fields = append(fields, field)
@@ -91,7 +91,7 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 	}
 	structType := structValue.Type()
 	record = NewRecord()
-	record.Fields = make(map[string]Field)
+	record.Fields = make(map[string]larkfield.Field)
 	for i := 0; i < structValue.NumField(); i++ {
 		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
@@ -101,7 +101,7 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 		}
 		baseField := fieldValue.Field(0)
 		hack := baseField.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
-		field := reflect.New(structField.Type).Interface().(Field)
+		field := reflect.New(structField.Type).Interface().(larkfield.Field)
 		tag := structField.Tag.Get("lark")
 		field.SetName(hack.Name())
 		field.SetType(hack.Type())
@@ -141,7 +141,7 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 			continue
 		}
 		value := field.UnderlayValue()
-		ff := reflect.New(structField.Type).Interface().(Field)
+		ff := reflect.New(structField.Type).Interface().(larkfield.Field)
 		ff.SetName(tag)
 		ff.SetType(convertToFieldType(structField.Type.String()))
 		ff.SetUnderlayValueNoDirty(value)
