@@ -111,6 +111,9 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 	if err != nil {
 		return err
 	}
+	if record.Id == "" {
+		return fmt.Errorf("record id is empty")
+	}
 	if len(fields) == 0 {
 		return nil
 	}
