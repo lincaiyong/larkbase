@@ -21,10 +21,11 @@ type DemoRecord struct {
 	Check      larkbase.CheckboxField     `lark:"check"`
 	Link       larkbase.UrlField          `lark:"超链接"`
 	Phone      larkbase.PhoneField        `lark:"电话"`
-	Progress   larkbase.NumberField       `lark:"进度"`
-	Email      larkbase.TextField         `lark:"Email"`
-	Code       larkbase.TextField         `lark:"条码"`
-	Currency   larkbase.NumberField       `lark:"货币"`
+	Progress   larkbase.ProgressField     `lark:"进度"`
+	Email      larkbase.EmailField        `lark:"Email"`
+	Code       larkbase.BarcodeField      `lark:"条码"`
+	Currency   larkbase.CurrencyField     `lark:"货币"`
+	Rating     larkbase.RatingField       `lark:"评分"`
 }
 
 var (
