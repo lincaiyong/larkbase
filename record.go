@@ -10,13 +10,9 @@ func NewRecord() *Record {
 }
 
 type Record struct {
-	Id     string
-	Fields map[string]larkfield.Field
-
-	CreatedTime  time.Time
+	Id           string
 	ModifiedTime time.Time
-	CreatePerson string
-	ModifyPerson string
+	Fields       map[string]larkfield.Field
 }
 
 func (r *Record) buildForLarkSuite() (map[string]any, error) {

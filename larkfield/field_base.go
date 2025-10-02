@@ -59,7 +59,7 @@ func stringValue(value any) string {
 		return v
 	}
 	if v, ok := value.(time.Time); ok {
-		return timeToBeijingDateTimeStr(v)
+		return TimeToBeijingDateTimeStr(v)
 	}
 	b, _ := json.Marshal(value)
 	return string(b)

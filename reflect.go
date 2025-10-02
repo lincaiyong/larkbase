@@ -96,7 +96,9 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
 		if structField.Name == "Meta" {
-			record.Id = fieldValue.Interface().(Meta).RecordId
+			meta := fieldValue.Interface().(Meta)
+			record.Id = meta.RecordId
+			record.ModifiedTime = meta.ModifiedTime
 			continue
 		}
 		baseField := fieldValue.Field(0)
@@ -131,7 +133,7 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
 		if structField.Name == "Meta" {
-			meta := Meta{RecordId: record.Id}
+			meta := Meta{RecordId: record.Id, ModifiedTime: record.ModifiedTime}
 			fieldValue.Set(reflect.ValueOf(meta))
 			continue
 		}
@@ -175,6 +177,7 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]string, error
 		if fieldType.Name() == "Meta" {
 			meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
 			m["_record_id"] = meta.RecordId
+			m["_modified_time"] = larkfield.TimeToBeijingDateTimeStr(meta.ModifiedTime)
 			continue
 		}
 		baseFieldValue := fieldValue.Field(0)

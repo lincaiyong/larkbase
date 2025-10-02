@@ -80,7 +80,7 @@ func (f *MultiSelectField) Parse(v any) error {
 
 func (f *DateField) Parse(v any) error {
 	if v1, ok1 := v.(float64); ok1 {
-		f.value = unixSecondsToTime(int64(v1 / 1000))
+		f.value = UnixSecondsToTime(int64(v1 / 1000))
 		return nil
 	} else {
 		return parseError(f.type_, "float64", v)

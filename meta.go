@@ -1,5 +1,8 @@
 package larkbase
 
+import "time"
+
 type Meta struct {
-	RecordId string
+	RecordId     string
+	ModifiedTime time.Time
 }
