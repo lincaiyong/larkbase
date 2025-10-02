@@ -60,6 +60,12 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	
+	err = conn.Delete(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	var record DemoRecord
 	err = conn.Find(&record, conn.Filter().Name.Is("andy"))

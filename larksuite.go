@@ -225,3 +225,21 @@ func (c *Connection[T]) createRecord(record *Record) error {
 	record.Id = r.Id
 	return nil
 }
+
+func (c *Connection[T]) deleteRecord(record *Record) error {
+	if record.Id == "" {
+		return fmt.Errorf("record id is empty")
+	}
+	builder := larkbitable.NewDeleteAppTableRecordReqBuilder().
+		AppToken(c.appToken).TableId(c.tableId).
+		RecordId(record.Id)
+	req := builder.Build()
+	resp, err := c.client.Bitable.V1.AppTableRecord.Delete(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable delete record: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	return nil
+}

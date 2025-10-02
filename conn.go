@@ -143,51 +143,20 @@ func (c *Connection[T]) Create(structPtr *T) error {
 	return c.convertRecordToStructPtr(record, structPtr)
 }
 
-//
-//func (c *Client) DeleteRecords(records []*Record) {
-//	for _, record := range records {
-//		builder := larkbitable.NewDeleteAppTableRecordReqBuilder().
-//			AppToken(c.appToken).TableId(c.table.Id).
-//			RecordId(record.Id)
-//		req := builder.Build()
-//		resp, err := c.Bitable.V1.AppTableRecord.Delete(context.Background(), req)
-//		if err != nil {
-//			log.FatalLog("fail to call bitable delete table: %v", err)
-//		}
-//		if !resp.Success() {
-//			log.FatalLog("unexpected response error: %s", larkcore.Prettify(resp.CodeError))
-//		}
-//	}
-//}
-//
-
-//
-//func (c *Client) UploadFile(filePath string) string {
-//	stat, err := os.Stat(filePath)
-//	if err != nil {
-//		log.FatalLog("fail to stat file: %v", err)
-//	}
-//	file, err := os.Open(filePath)
-//	if err != nil {
-//		log.FatalLog("fail to open file: %v", err)
-//	}
-//	defer func() { _ = file.Close() }()
-//	req := larkdrive.NewUploadAllMediaReqBuilder().
-//		Body(larkdrive.NewUploadAllMediaReqBodyBuilder().
-//			FileName(path.Base(filePath)).
-//			ParentType(`bitable_file`).
-//			ParentNode(c.appToken).
-//			Size(int(stat.Size())).
-//			File(file).
-//			Build()).
-//		Build()
-//
-//	resp, err := c.Drive.V1.Media.UploadAll(context.Background(), req)
-//	if err != nil {
-//		log.FatalLog("fail to call bitable upload table: %v", err)
-//	}
-//	if !resp.Success() {
-//		log.FatalLog("unexpected response error: %s", larkcore.Prettify(resp.CodeError))
-//	}
-//	return *resp.Data.FileToken
-//}
+func (c *Connection[T]) Delete(structPtr *T) error {
+	if structPtr == nil {
+		return errors.New("structPtr is nil")
+	}
+	if err := c.fillStructPtr(structPtr); err != nil {
+		return err
+	}
+	record, err := c.convertStructPtrToRecord(structPtr)
+	if err != nil {
+		return err
+	}
+	err = c.deleteRecord(record)
+	if err != nil {
+		return err
+	}
+	return nil
+}
