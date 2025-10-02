@@ -18,6 +18,13 @@ type DemoRecord struct {
 	Single     larkbase.SingleSelectField `lark:"单选"`
 	Person     larkbase.PersonField       `lark:"人员"`
 	Check      larkbase.CheckboxField     `lark:"check"`
+	Formula    larkbase.FormulaField      `lark:"公式"`
+	Link       larkbase.UrlField          `lark:"超链接"`
+	Phone      larkbase.PhoneField        `lark:"电话"`
+	Progress   larkbase.NumberField       `lark:"进度"`
+	Email      larkbase.TextField         `lark:"Email"`
+	Code       larkbase.TextField         `lark:"条码"`
+	Test       larkbase.NumberField       `lark:"货币"`
 }
 
 var (

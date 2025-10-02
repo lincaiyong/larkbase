@@ -2,8 +2,10 @@ package larkbase
 
 import (
 	"errors"
+	"fmt"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	"github.com/lincaiyong/larkbase/field"
 	"reflect"
 )
 
@@ -24,11 +26,11 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 
 	var fieldNames []string
 	fieldMap := make(map[string]Field)
-	for _, field := range fields {
-		fieldNames = append(fieldNames, field.Name())
-		fieldMap[field.Name()] = field
+	for _, structField := range fields {
+		fieldNames = append(fieldNames, structField.Name())
+		fieldMap[structField.Name()] = structField
 	}
-	return &Connection[T]{
+	conn := &Connection[T]{
 		client:     client,
 		filter:     structPtr,
 		tableUrl:   tableUrl,
@@ -37,7 +39,14 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 		fields:     fields,
 		fieldNames: fieldNames,
 		fieldMap:   fieldMap,
-	}, nil
+	}
+
+	err = conn.checkFields()
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
 
 type Connection[T any] struct {
@@ -109,6 +118,26 @@ func (c *Connection[T]) UpdateOne(structPtr any) error {
 		return err
 	}
 	return c.updateRecord(record)
+}
+
+func (c *Connection[T]) checkFields() error {
+	fields := make(map[string]field.Type)
+	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
+		return c.queryFieldsByPage(pageToken, fields)
+	})
+	if err != nil {
+		return err
+	}
+	for name, structField := range c.fieldMap {
+		f, ok := fields[name]
+		if !ok {
+			return fmt.Errorf("field %s is not found in larkbase table: %s", name, c.tableUrl)
+		}
+		if structField.Type() != f.String() {
+			return fmt.Errorf("field %s in larkbase table %s has type %s, not %s", name, c.tableUrl, f.String(), structField.Type())
+		}
+	}
+	return nil
 }
 
 //

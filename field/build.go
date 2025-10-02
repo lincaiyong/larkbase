@@ -70,22 +70,6 @@ func (f *WorkflowField) Build() any {
 	return nil
 }
 
-func (f *CreatedTimeField) Build() any {
-	return nil
-}
-
-func (f *ModifiedTimeField) Build() any {
-	return nil
-}
-
-func (f *CreatePersonField) Build() any {
-	return nil
-}
-
-func (f *ModifyPersonField) Build() any {
-	return nil
-}
-
 func (f *AutoNumberField) Build() any {
 	return fmt.Sprintf("%d", f.Value())
 }

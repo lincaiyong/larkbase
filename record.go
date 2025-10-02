@@ -1,5 +1,7 @@
 package larkbase
 
+import "time"
+
 func NewRecord() *Record {
 	return new(Record)
 }
@@ -7,6 +9,11 @@ func NewRecord() *Record {
 type Record struct {
 	Id     string
 	Fields map[string]Field
+
+	CreatedTime  time.Time
+	ModifiedTime time.Time
+	CreatePerson string
+	ModifyPerson string
 }
 
 func (r *Record) buildForLarkSuite() (map[string]any, error) {

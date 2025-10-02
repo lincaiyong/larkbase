@@ -13,6 +13,6 @@ type Field interface {
 
 	Fork() Field
 
-	Parse(v any)
+	Parse(v any) error
 	Build() any
 }

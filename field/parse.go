@@ -1,72 +1,102 @@
 package field
 
 import (
+	"fmt"
 	"github.com/lincaiyong/log"
 	"strconv"
 	"strings"
 )
 
-func parseError(type_, expect string, v any) {
-	log.FatalLog("fail to parse value for number field: expect float64, got %T", v)
+func parseError(type_, expect string, v any) error {
+	return fmt.Errorf("fail to parse value for %s field: expect %s, got %T", type_, expect, v)
 }
 
-func (f *TextField) Parse(v any) {
+func (f *TextField) Parse(v any) error {
 	if v1, ok1 := v.([]any); ok1 {
 		items := make([]string, 0)
 		for _, v2 := range v1 {
 			if v3, ok3 := v2.(map[string]any); ok3 {
 				type_, okT := v3["type"].(string)
 				if !okT {
-					parseError(f.type_, "string", v3["type"])
+					return parseError(f.type_, "string", v3["type"])
 				}
-				if type_ != "text" {
-					log.FatalLog("fail to handle text field type: %s", type_)
+				switch type_ {
+				case "text", "url":
+					value, okV := v3["text"].(string)
+					if !okV {
+						return parseError(f.type_, "string", v3["value"])
+					}
+					items = append(items, value)
+				default:
+					return fmt.Errorf("fail to handle text field type: %s", type_)
 				}
-				value, okV := v3["text"].(string)
-				if !okV {
-					parseError(f.type_, "string", v3["value"])
-				}
-				items = append(items, value)
+
 			}
 		}
 		if len(items) > 1 {
-			log.FatalLog("fail to handle text field with more than 1 item: %s", strings.Join(items, ","))
+			return fmt.Errorf("fail to handle text field with more than 1 item: %s", strings.Join(items, ","))
 		}
 		if len(items) == 1 {
 			f.value = items[0]
 		}
 	}
+	return nil
 }
 
-func (f *NumberField) Parse(v any) {
+func (f *NumberField) Parse(v any) error {
 	if vv, ok := v.(float64); ok {
 		f.value = vv
+		return nil
 	} else {
-		parseError(f.type_, "float64", v)
+		return parseError(f.type_, "float64", v)
 	}
 }
 
-func (f *SingleSelectField) Parse(v any) {
-
+func (f *SingleSelectField) Parse(v any) error {
+	if v1, ok1 := v.(string); ok1 {
+		f.value = v1
+		return nil
+	} else {
+		return parseError(f.type_, "string", v)
+	}
 }
 
-func (f *MultiSelectField) Parse(v any) {
-
+func (f *MultiSelectField) Parse(v any) error {
+	if v1, ok1 := v.([]any); ok1 {
+		items := make([]string, 0)
+		for _, v2 := range v1 {
+			if v3, ok3 := v2.(string); ok3 {
+				items = append(items, v3)
+			} else {
+				return parseError(f.type_, "string", v2)
+			}
+		}
+		f.value = items
+		return nil
+	} else {
+		return parseError(f.type_, "[]any", v)
+	}
 }
 
-func (f *DateField) Parse(v any) {
-
+func (f *DateField) Parse(v any) error {
+	if v1, ok1 := v.(float64); ok1 {
+		f.value = unixSecondsToTime(int64(v1 / 1000))
+		return nil
+	} else {
+		return parseError(f.type_, "float64", v)
+	}
 }
 
-func (f *CheckboxField) Parse(v any) {
+func (f *CheckboxField) Parse(v any) error {
 	if val, ok := v.(bool); ok {
 		f.value = val
+		return nil
 	} else {
-		parseError(f.type_, "bool", v)
+		return parseError(f.type_, "bool", v)
 	}
 }
 
-func (f *PersonField) Parse(v any) {
+func (f *PersonField) Parse(v any) error {
 	if v1, ok1 := v.([]any); ok1 {
 		items := make([]string, 0)
 		for _, v2 := range v1 {
@@ -74,82 +104,113 @@ func (f *PersonField) Parse(v any) {
 				if v4, ok4 := v3["name"].(string); ok4 {
 					items = append(items, v4)
 				} else {
-					parseError(f.type_, "string", v3["name"])
+					return parseError(f.type_, "string", v3["name"])
 				}
 			} else {
-				parseError(f.type_, "map[string]any", v2)
+				return parseError(f.type_, "map[string]any", v2)
 			}
 		}
 		f.value = items
+		return nil
 	} else {
-		parseError(f.type_, "[]any", v)
+		return parseError(f.type_, "[]any", v)
 	}
 }
 
-func (f *PhoneField) Parse(v any) {
-
+func (f *PhoneField) Parse(v any) error {
+	if v1, ok1 := v.(string); ok1 {
+		f.value = v1
+		return nil
+	} else {
+		return parseError(f.type_, "string", v)
+	}
 }
 
-func (f *UrlField) Parse(v any) {
-
+func (f *UrlField) Parse(v any) error {
+	if v1, ok1 := v.(map[string]any); ok1 {
+		type_, ok2 := v1["type"].(string)
+		if !ok2 {
+			return parseError(f.type_, "string", v1["type"])
+		}
+		if type_ != "url" {
+			return fmt.Errorf("fail to handle url field type: %s", type_)
+		}
+		link, ok3 := v1["link"].(string)
+		if !ok3 {
+			return parseError(f.type_, "string", v1["link"])
+		}
+		f.value = link
+		return nil
+	} else {
+		return parseError(f.type_, "map[string]any", v)
+	}
 }
 
-func (f *MediaField) Parse(v any) {
-
+func (f *MediaField) Parse(v any) error {
+	if v1, ok1 := v.([]any); ok1 {
+		items := make([]string, 0)
+		for _, v2 := range v1 {
+			if v3, ok3 := v2.(map[string]any); ok3 {
+				fileToken, ok4 := v3["file_token"].(string)
+				if !ok4 {
+					return parseError(f.type_, "string", v3["file_token"])
+				}
+				items = append(items, fileToken)
+			} else {
+				return parseError(f.type_, "map[string]any", v2)
+			}
+		}
+		return nil
+	} else {
+		return parseError(f.type_, "[]any", v)
+	}
 }
 
-func (f *SingleLinkField) Parse(v any) {
-
+func (f *SingleLinkField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *LookupField) Parse(v any) {
-
+func (f *LookupField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *FormulaField) Parse(v any) {
-
+func (f *FormulaField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *DuplexLinkField) Parse(v any) {
-
+func (f *DuplexLinkField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *LocationField) Parse(v any) {
-
+func (f *LocationField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *GroupField) Parse(v any) {
-
+func (f *GroupField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *WorkflowField) Parse(v any) {
-
+func (f *WorkflowField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }
 
-func (f *CreatedTimeField) Parse(v any) {
-
-}
-
-func (f *ModifiedTimeField) Parse(v any) {
-
-}
-
-func (f *CreatePersonField) Parse(v any) {
-
-}
-
-func (f *ModifyPersonField) Parse(v any) {
-
-}
-
-func (f *AutoNumberField) Parse(v any) {
+func (f *AutoNumberField) Parse(v any) error {
 	if val, err := strconv.ParseInt(v.(string), 0, 64); err == nil {
 		f.value = int(val)
+		return nil
 	} else {
-		parseError(f.type_, "integer string", v)
+		return parseError(f.type_, "integer string", v)
 	}
 }
 
-func (f *ButtonField) Parse(v any) {
-
+func (f *ButtonField) Parse(_ any) error {
+	log.WarnLog("%s field parse skipped", f.type_)
+	return nil
 }

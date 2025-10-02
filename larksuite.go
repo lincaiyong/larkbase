@@ -5,6 +5,7 @@ import (
 	"fmt"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	"github.com/lincaiyong/larkbase/field"
 )
 
 func queryAllPages(f func(pageToken string) (newPageToken string, err error)) error {
@@ -55,9 +56,12 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 			Fields: make(map[string]Field),
 		}
 		for name, value := range item.Fields {
-			field := c.fieldMap[name].Fork()
-			field.Parse(value)
-			record.Fields[name] = field
+			structField := c.fieldMap[name].Fork()
+			err = structField.Parse(value)
+			if err != nil {
+				return nil, "", err
+			}
+			record.Fields[name] = structField
 		}
 		records = append(records, record)
 	}
@@ -65,28 +69,6 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 		return records, *resp.Data.PageToken, nil
 	}
 	return records, "", nil
-}
-
-func (c *Connection[T]) queryTableRecordByPage(pageToken string, total *int) (string, error) {
-	const pageSize = 100
-	req := larkbitable.NewSearchAppTableRecordReqBuilder().
-		AppToken(c.appToken).
-		TableId(c.tableId).
-		PageToken(pageToken).
-		PageSize(pageSize).
-		Body(larkbitable.NewSearchAppTableRecordReqBodyBuilder().Build()).Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.Search(context.Background(), req)
-	if err != nil {
-		return "", fmt.Errorf("fail to call bitable search table: %v", err)
-	}
-	if !resp.Success() {
-		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
-	}
-	*total += *resp.Data.Total
-	if *resp.Data.HasMore {
-		return *resp.Data.PageToken, nil
-	}
-	return "", nil
 }
 
 func (c *Connection[T]) updateRecord(record *Record) error {
@@ -113,4 +95,29 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	return nil
+}
+
+func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]field.Type) (string, error) {
+	pageSize := 100
+	req := larkbitable.NewListAppTableFieldReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		PageToken(pageToken).
+		PageSize(pageSize).
+		Build()
+	resp, err := c.client.Bitable.V1.AppTableField.List(context.Background(), req)
+	if err != nil {
+		return "", fmt.Errorf("fail to call bitable list field: %v", err)
+	}
+	if !resp.Success() {
+		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	for _, item := range resp.Data.Items {
+		fields[*item.FieldName] = field.Type(*item.Type)
+	}
+	hasMore := *resp.Data.HasMore
+	if hasMore {
+		return *resp.Data.PageToken, nil
+	}
+	return "", nil
 }

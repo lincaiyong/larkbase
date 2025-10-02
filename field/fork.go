@@ -68,22 +68,6 @@ func (f *WorkflowField) Fork() Field {
 	return &WorkflowField{BaseField{name: f.name, type_: f.type_, value: f.value}}
 }
 
-func (f *CreatedTimeField) Fork() Field {
-	return &CreatedTimeField{BaseField{name: f.name, type_: f.type_, value: f.value}}
-}
-
-func (f *ModifiedTimeField) Fork() Field {
-	return &ModifiedTimeField{BaseField{name: f.name, type_: f.type_, value: f.value}}
-}
-
-func (f *CreatePersonField) Fork() Field {
-	return &CreatePersonField{BaseField{name: f.name, type_: f.type_, value: f.value}}
-}
-
-func (f *ModifyPersonField) Fork() Field {
-	return &ModifyPersonField{BaseField{name: f.name, type_: f.type_, value: f.value}}
-}
-
 func (f *AutoNumberField) Fork() Field {
 	return &AutoNumberField{BaseField{name: f.name, type_: f.type_, value: f.value}}
 }
