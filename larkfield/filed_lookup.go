@@ -1,4 +1,4 @@
-package field
+package larkfield
 
 type LookupField struct {
 	BaseField

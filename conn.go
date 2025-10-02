@@ -5,8 +5,7 @@ import (
 	"fmt"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
-	"github.com/lincaiyong/larkbase/field"
-	"reflect"
+	"github.com/lincaiyong/larkbase/larkfield"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
@@ -14,7 +13,7 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
-	structPtr := reflect.New(reflect.TypeOf((*T)(nil)).Elem()).Interface().(*T)
+	structPtr := new(T)
 	conn := &Connection[T]{filter: structPtr}
 	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
@@ -128,7 +127,7 @@ func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
 }
 
 func (c *Connection[T]) checkFields() error {
-	fields := make(map[string]field.Type)
+	fields := make(map[string]larkfield.Type)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
 		return c.queryFieldsByPage(pageToken, fields)
 	})

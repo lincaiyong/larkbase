@@ -1,8 +1,10 @@
 package larkbase
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/lincaiyong/larkbase/field"
+	"github.com/lincaiyong/larkbase/larkfield"
 	"reflect"
 	"regexp"
 	"strings"
@@ -20,7 +22,7 @@ func extractAppTokenTableIdFromUrl(url string) (string, string) {
 }
 
 func convertToFieldType(s string) string {
-	return s[len("field.") : len(s)-len("Field")] // a little bit hacking
+	return s[len("larkfield.") : len(s)-len("Field")] // a little bit hacking
 }
 
 func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []Field, err error) {
@@ -31,11 +33,11 @@ func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, ap
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
 		fieldValue := structValue.Field(i)
-		f := reflect.New(structField.Type).Interface().(Field)
-		f.SetName(structField.Tag.Get("lark"))
-		f.SetType(convertToFieldType(structField.Type.String()))
-		fields = append(fields, f)
-		fieldValue.Set(reflect.ValueOf(f).Elem())
+		field := reflect.New(structField.Type).Interface().(Field)
+		field.SetName(structField.Tag.Get("lark"))
+		field.SetType(convertToFieldType(structField.Type.String()))
+		fields = append(fields, field)
+		fieldValue.Set(reflect.ValueOf(field).Elem())
 	}
 	return
 }
@@ -56,8 +58,8 @@ func (c *Connection[T]) checkStructType(structType reflect.Type) error {
 	for i := 1; i < structType.NumField(); i++ {
 		structField := structType.Field(i)
 		typeName := structField.Type.String()
-		if !strings.HasPrefix(typeName, "field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
-			return fmt.Errorf("field type of user struct should be field.XxxField, got %s", typeName)
+		if !strings.HasPrefix(typeName, "larkfield.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
+			return fmt.Errorf("field type of user struct should be larkfield.XxxField, got %s", typeName)
 		}
 		tag := structField.Tag.Get("lark")
 		if tag == "" {
@@ -98,14 +100,14 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 			continue
 		}
 		baseField := fieldValue.Field(0)
-		hack := baseField.Convert(reflect.TypeOf(field.HackBaseField{})).Interface().(field.HackBaseField)
-		f := reflect.New(structField.Type).Interface().(Field)
+		hack := baseField.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
+		field := reflect.New(structField.Type).Interface().(Field)
 		tag := structField.Tag.Get("lark")
-		f.SetName(hack.Name())
-		f.SetType(hack.Type())
-		f.SetUnderlayValueNoDirty(hack.Value())
-		f.SetDirty(hack.Dirty())
-		record.Fields[tag] = f
+		field.SetName(hack.Name())
+		field.SetType(hack.Type())
+		field.SetUnderlayValueNoDirty(hack.Value())
+		field.SetDirty(hack.Dirty())
+		record.Fields[tag] = field
 	}
 	return
 }
@@ -134,11 +136,11 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 			continue
 		}
 		tag := structField.Tag.Get("lark")
-		f, ok := record.Fields[tag]
+		field, ok := record.Fields[tag]
 		if !ok {
 			continue
 		}
-		value := f.UnderlayValue()
+		value := field.UnderlayValue()
 		ff := reflect.New(structField.Type).Interface().(Field)
 		ff.SetName(tag)
 		ff.SetType(convertToFieldType(structField.Type.String()))
@@ -159,4 +161,54 @@ func (c *Connection[T]) convertRecordsToStructPtrSlicePtr(records []*Record, str
 	}
 	*structPtrSlicePtr = ret
 	return nil
+}
+
+func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]any, error) {
+	if structPtr == nil {
+		return nil, errors.New("structPtr is nil")
+	}
+	m := make(map[string]any)
+	structValue := reflect.ValueOf(structPtr).Elem()
+	for j := 0; j < structValue.NumField(); j++ {
+		fieldValue := structValue.Field(j)
+		fieldType := fieldValue.Type()
+		if fieldType.Name() == "Meta" {
+			meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
+			m["_record_id"] = meta.RecordId
+			continue
+		}
+		baseFieldValue := fieldValue.Field(0)
+		hack := baseFieldValue.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
+		name := hack.Name()
+		value := hack.Value()
+		if value != nil {
+			m[name] = value
+		}
+	}
+	return m, nil
+}
+
+func (c *Connection[T]) MarshalRecords(structPtrSlice []*T) (string, error) {
+	s := make([]map[string]any, 0)
+	for _, structPtr := range structPtrSlice {
+		m, err := c.marshalStructPtr(structPtr)
+		if err != nil {
+			return "", err
+		}
+		s = append(s, m)
+	}
+	b, _ := json.MarshalIndent(s, "", "  ")
+	return string(b), nil
+}
+
+func (c *Connection[T]) MarshalRecord(structPtr *T) (string, error) {
+	if structPtr == nil {
+		return "", errors.New("structPtr is nil")
+	}
+	m, err := c.marshalStructPtr(structPtr)
+	if err != nil {
+		return "", err
+	}
+	b, _ := json.MarshalIndent(m, "", "  ")
+	return string(b), nil
 }

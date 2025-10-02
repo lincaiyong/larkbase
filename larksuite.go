@@ -5,7 +5,7 @@ import (
 	"fmt"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
-	"github.com/lincaiyong/larkbase/field"
+	"github.com/lincaiyong/larkbase/larkfield"
 )
 
 func queryAllPages(f func(pageToken string) (newPageToken string, err error)) error {
@@ -134,7 +134,7 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 	return nil
 }
 
-func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]field.Type) (string, error) {
+func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]larkfield.Type) (string, error) {
 	pageSize := 100
 	req := larkbitable.NewListAppTableFieldReqBuilder().
 		AppToken(c.appToken).
@@ -150,7 +150,7 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]fi
 		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	for _, item := range resp.Data.Items {
-		fields[*item.FieldName] = field.Type(*item.Type)
+		fields[*item.FieldName] = larkfield.Type(*item.Type)
 	}
 	hasMore := *resp.Data.HasMore
 	if hasMore {

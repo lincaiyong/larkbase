@@ -1,3 +1,3 @@
-package field
+package larkfield
 
 type LocationField struct{ BaseField }

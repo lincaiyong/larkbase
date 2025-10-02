@@ -1,4 +1,4 @@
-package field
+package larkfield
 
 type PersonField struct {
 	BaseField

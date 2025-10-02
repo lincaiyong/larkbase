@@ -1,4 +1,4 @@
-package field
+package larkfield
 
 import larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 

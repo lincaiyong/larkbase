@@ -1,24 +1,26 @@
 package larkbase
 
-import "github.com/lincaiyong/larkbase/field"
+import (
+	"github.com/lincaiyong/larkbase/larkfield"
+)
 
-type Field = field.Field
-type TextField = field.TextField
-type NumberField = field.NumberField
-type SingleSelectField = field.SingleSelectField
-type MultiSelectField = field.MultiSelectField
-type DateField = field.DateField
-type CheckboxField = field.CheckboxField
-type PersonField = field.PersonField
-type PhoneField = field.PhoneField
-type UrlField = field.UrlField
-type MediaField = field.MediaField
-type SingleLinkField = field.SingleLinkField
-type LookupField = field.LookupField
-type FormulaField = field.FormulaField
-type DuplexLinkField = field.DuplexLinkField
-type LocationField = field.LocationField
-type GroupField = field.GroupField
-type WorkflowField = field.WorkflowField
-type AutoNumberField = field.AutoNumberField
-type ButtonField = field.ButtonField
+type Field = larkfield.Field
+type TextField = larkfield.TextField
+type NumberField = larkfield.NumberField
+type SingleSelectField = larkfield.SingleSelectField
+type MultiSelectField = larkfield.MultiSelectField
+type DateField = larkfield.DateField
+type CheckboxField = larkfield.CheckboxField
+type PersonField = larkfield.PersonField
+type PhoneField = larkfield.PhoneField
+type UrlField = larkfield.UrlField
+type MediaField = larkfield.MediaField
+type SingleLinkField = larkfield.SingleLinkField
+type LookupField = larkfield.LookupField
+type FormulaField = larkfield.FormulaField
+type DuplexLinkField = larkfield.DuplexLinkField
+type LocationField = larkfield.LocationField
+type GroupField = larkfield.GroupField
+type WorkflowField = larkfield.WorkflowField
+type AutoNumberField = larkfield.AutoNumberField
+type ButtonField = larkfield.ButtonField

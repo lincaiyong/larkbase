@@ -1,4 +1,4 @@
-package field
+package larkfield
 
 func (f *TextField) Fork() Field {
 	return &TextField{BaseField{name: f.name, type_: f.type_, value: f.value}}
