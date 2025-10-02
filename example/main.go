@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type Demo struct {
+type DemoRecord struct {
 	larkbase.Meta `lark:"https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y"`
 
 	No         larkbase.AutoNumberField   `lark:"no"`
@@ -26,15 +26,14 @@ var (
 )
 
 func main() {
-	demo := &Demo{}
-	conn, err := larkbase.Connect(larkAppId, larkAppSecret, demo)
+	conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	var record Demo
-	err = conn.FindOne(&record, demo.Name.FilterIs("andy"))
+	var record DemoRecord
+	err = conn.FindOne(&record, conn.Filter().Name.Is("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -53,8 +52,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	var records []Demo
-	err = conn.FindAll(&records, demo.Name.FilterIsNot("andy"))
+	var records []DemoRecord
+	err = conn.FindAll(&records, conn.Filter().Name.IsNot("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

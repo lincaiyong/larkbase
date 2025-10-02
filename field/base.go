@@ -50,6 +50,14 @@ func (f *BaseField) Dirty() bool {
 	return f.dirty
 }
 
+func (f *BaseField) Fork() Field {
+	return &BaseField{
+		name:  f.name,
+		type_: f.type_,
+		value: f.value,
+	}
+}
+
 func (f *BaseField) ParseFromLarkSuite(v any) {
 	switch f.Type() {
 	case "Text":

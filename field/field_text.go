@@ -6,21 +6,21 @@ type TextField struct {
 	BaseField
 }
 
-func (f *TextField) FilterIs(value string) *larkbitable.Condition {
+func (f *TextField) Is(value string) *larkbitable.Condition {
 	return filterIs(f.name, value)
 }
-func (f *TextField) FilterIsNot(value string) *larkbitable.Condition {
+func (f *TextField) IsNot(value string) *larkbitable.Condition {
 	return filterIsNot(f.name, value)
 }
-func (f *TextField) FilterContains(value string) *larkbitable.Condition {
+func (f *TextField) Contains(value string) *larkbitable.Condition {
 	return filterContains(f.name, value)
 }
-func (f *TextField) FilterDoesNotContains(value string) *larkbitable.Condition {
+func (f *TextField) DoesNotContains(value string) *larkbitable.Condition {
 	return filterDoesNotContains(f.name, value)
 }
-func (f *TextField) FilterIsEmpty() *larkbitable.Condition {
+func (f *TextField) IsEmpty() *larkbitable.Condition {
 	return filterIsEmpty(f.name)
 }
-func (f *TextField) FilterIsNotEmpty() *larkbitable.Condition {
+func (f *TextField) IsNotEmpty() *larkbitable.Condition {
 	return filterIsNotEmpty(f.name)
 }

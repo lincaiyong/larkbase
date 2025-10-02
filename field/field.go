@@ -10,6 +10,8 @@ type Field interface {
 	SetValueNoDirty(string)
 	Dirty() bool
 
+	Fork() Field
+
 	ParseFromLarkSuite(v any)
 	BuildForLarkSuite() (any, error)
 }

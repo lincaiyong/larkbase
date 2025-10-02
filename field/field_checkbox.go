@@ -6,6 +6,6 @@ type CheckboxField struct {
 	BaseField
 }
 
-func (f *CheckboxField) FilterIs(value bool) *larkbitable.Condition {
+func (f *CheckboxField) Is(value bool) *larkbitable.Condition {
 	return filterIs(f.name, map[bool]string{true: "1", false: ""}[value])
 }

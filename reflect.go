@@ -22,12 +22,11 @@ func convertToFieldType(s string) string {
 	return s[len("*field.") : len(s)-len("Field")] // a little bit hacking
 }
 
-func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
+func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId string, fields []Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	metaField := structValue.Type().Field(0)
-	tableUrl := metaField.Tag.Get("lark")
-	appToken, tableId := extractAppTokenTableIdFromUrl(tableUrl)
-	fields := make([]Field, 0)
+	tableUrl = metaField.Tag.Get("lark")
+	appToken, tableId = extractAppTokenTableIdFromUrl(tableUrl)
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
 		fieldValue := structValue.Field(i)
@@ -37,7 +36,6 @@ func extractTableAndFillBasicInfo(structPtr any) (table *Table, err error) {
 		fields = append(fields, field)
 		fieldValue.Set(reflect.ValueOf(field))
 	}
-	table = NewTable(tableUrl, appToken, tableId, fields)
 	return
 }
 

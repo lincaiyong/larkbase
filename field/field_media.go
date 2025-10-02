@@ -6,9 +6,9 @@ type MediaField struct {
 	BaseField
 }
 
-func (f *MediaField) FilterIsEmpty() *larkbitable.Condition {
+func (f *MediaField) IsEmpty() *larkbitable.Condition {
 	return filterIsEmpty(f.name)
 }
-func (f *MediaField) FilterIsNotEmpty() *larkbitable.Condition {
+func (f *MediaField) IsNotEmpty() *larkbitable.Condition {
 	return filterIsNotEmpty(f.name)
 }

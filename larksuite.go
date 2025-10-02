@@ -22,10 +22,12 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 	return nil
 }
 
-func (c *Connection) queryRecordsByPage(filters []*larkbitable.Condition, pageToken string, limit int, records []*Record) ([]*Record, string, error) {
-	const pageSize = 100
+func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
+	if pageSize == 0 {
+		pageSize = 100
+	}
 	bodyBuilder := larkbitable.NewSearchAppTableRecordReqBodyBuilder()
-	bodyBuilder.FieldNames(c.table.FieldNames())
+	bodyBuilder.FieldNames(c.fieldNames)
 	if len(filters) > 0 {
 		bodyBuilder.Filter(larkbitable.NewFilterInfoBuilder().
 			Conjunction(`and`).
@@ -34,14 +36,11 @@ func (c *Connection) queryRecordsByPage(filters []*larkbitable.Condition, pageTo
 	}
 	bodyBuilder.AutomaticFields(true)
 	reqBuilder := larkbitable.NewSearchAppTableRecordReqBuilder().
-		AppToken(c.table.AppToken()).
-		TableId(c.table.TableId()).
+		AppToken(c.appToken).
+		TableId(c.tableId).
 		PageToken(pageToken).
 		PageSize(pageSize).
 		Body(bodyBuilder.Build())
-	if limit > 0 {
-		reqBuilder.Limit(limit)
-	}
 	req := reqBuilder.Build()
 	var resp, err = c.client.Bitable.V1.AppTableRecord.Search(context.Background(), req)
 	if err != nil {
@@ -56,7 +55,7 @@ func (c *Connection) queryRecordsByPage(filters []*larkbitable.Condition, pageTo
 			Fields: make(map[string]Field),
 		}
 		for name, fi := range item.Fields {
-			field := c.table.GetField(name)
+			field := c.fieldMap[name].Fork()
 			field.ParseFromLarkSuite(fi)
 			record.Fields[name] = field
 		}
@@ -68,11 +67,11 @@ func (c *Connection) queryRecordsByPage(filters []*larkbitable.Condition, pageTo
 	return records, "", nil
 }
 
-func (c *Connection) queryTableRecordByPage(pageToken string, total *int) (string, error) {
+func (c *Connection[T]) queryTableRecordByPage(pageToken string, total *int) (string, error) {
 	const pageSize = 100
 	req := larkbitable.NewSearchAppTableRecordReqBuilder().
-		AppToken(c.table.AppToken()).
-		TableId(c.table.TableId()).
+		AppToken(c.appToken).
+		TableId(c.tableId).
 		PageToken(pageToken).
 		PageSize(pageSize).
 		Body(larkbitable.NewSearchAppTableRecordReqBodyBuilder().Build()).Build()
@@ -90,7 +89,7 @@ func (c *Connection) queryTableRecordByPage(pageToken string, total *int) (strin
 	return "", nil
 }
 
-func (c *Connection) updateRecord(record *Record) error {
+func (c *Connection[T]) updateRecord(record *Record) error {
 	fields, err := record.buildForLarkSuite()
 	if err != nil {
 		return err
@@ -99,8 +98,8 @@ func (c *Connection) updateRecord(record *Record) error {
 		return nil
 	}
 	req := larkbitable.NewUpdateAppTableRecordReqBuilder().
-		AppToken(c.table.appToken).
-		TableId(c.table.tableId).
+		AppToken(c.appToken).
+		TableId(c.tableId).
 		RecordId(record.Id).
 		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
 			Fields(fields).

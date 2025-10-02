@@ -4,36 +4,66 @@ import (
 	"errors"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	"reflect"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
-func Connect(appId, appSecret string, structPtr any) (*Connection, error) {
+func Connect[T any](appId, appSecret string) (*Connection[T], error) {
+	structPtr := reflect.New(reflect.TypeOf((*T)(nil)).Elem()).Interface().(*T)
 	if err := checkUserStructPtr(structPtr); err != nil {
 		return nil, err
 	}
-	table, err := extractTableAndFillBasicInfo(structPtr)
+	tableUrl, appToken, tableId, fields, err := extractTableAndFillBasicInfo(structPtr)
 	if err != nil {
 		return nil, err
 	}
 	client := lark.NewClient(appId, appSecret)
-	return &Connection{client, table}, nil
+
+	var fieldNames []string
+	fieldMap := make(map[string]Field)
+	for _, field := range fields {
+		fieldNames = append(fieldNames, field.Name())
+		fieldMap[field.Name()] = field
+	}
+	return &Connection[T]{
+		client:     client,
+		filter:     structPtr,
+		tableUrl:   tableUrl,
+		appToken:   appToken,
+		tableId:    tableId,
+		fields:     fields,
+		fieldNames: fieldNames,
+		fieldMap:   fieldMap,
+	}, nil
 }
 
-type Connection struct {
+type Connection[T any] struct {
 	client *lark.Client
-	table  *Table
+
+	filter *T
+
+	tableUrl   string
+	appToken   string
+	tableId    string
+	fields     []Field
+	fieldNames []string
+	fieldMap   map[string]Field
+}
+
+func (c *Connection[T]) Filter() *T {
+	return c.filter
 }
 
 var errorNotFound = errors.New("record not found")
 
-func (c *Connection) IsNotFoundError(err error) bool {
+func (c *Connection[T]) IsNotFoundError(err error) bool {
 	return errors.Is(err, errorNotFound)
 }
 
-func (c *Connection) FindOne(structPtr any, filters ...*larkbitable.Condition) error {
+func (c *Connection[T]) FindOne(structPtr any, filters ...*larkbitable.Condition) error {
 	if err := checkUserStructPtr(structPtr); err != nil {
 		return err
 	}
@@ -44,7 +74,7 @@ func (c *Connection) FindOne(structPtr any, filters ...*larkbitable.Condition) e
 	if err != nil {
 		return err
 	}
-	if len(records) != 1 {
+	if len(records) == 0 {
 		return errorNotFound
 	}
 	record := records[0]
@@ -55,7 +85,7 @@ func (c *Connection) FindOne(structPtr any, filters ...*larkbitable.Condition) e
 	return nil
 }
 
-func (c *Connection) FindAll(structSlicePtr any, filters ...*larkbitable.Condition) error {
+func (c *Connection[T]) FindAll(structSlicePtr any, filters ...*larkbitable.Condition) error {
 	if err := checkUserStructSlicePtr(structSlicePtr); err != nil {
 		return err
 	}
@@ -70,7 +100,7 @@ func (c *Connection) FindAll(structSlicePtr any, filters ...*larkbitable.Conditi
 	return convertRecordsToUserStructSlicePtr(records, structSlicePtr)
 }
 
-func (c *Connection) UpdateOne(structPtr any) error {
+func (c *Connection[T]) UpdateOne(structPtr any) error {
 	if err := checkUserStructPtr(structPtr); err != nil {
 		return err
 	}
