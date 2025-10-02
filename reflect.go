@@ -163,11 +163,11 @@ func (c *Connection[T]) convertRecordsToStructPtrSlicePtr(records []*Record, str
 	return nil
 }
 
-func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]any, error) {
+func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]string, error) {
 	if structPtr == nil {
 		return nil, errors.New("structPtr is nil")
 	}
-	m := make(map[string]any)
+	m := make(map[string]string)
 	structValue := reflect.ValueOf(structPtr).Elem()
 	for j := 0; j < structValue.NumField(); j++ {
 		fieldValue := structValue.Field(j)
@@ -180,8 +180,8 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]any, error) {
 		baseFieldValue := fieldValue.Field(0)
 		hack := baseFieldValue.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
 		name := hack.Name()
-		value := hack.Value()
-		if value != nil {
+		value := hack.StringValue()
+		if value != "" {
 			m[name] = value
 		}
 	}
@@ -189,7 +189,7 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]any, error) {
 }
 
 func (c *Connection[T]) MarshalRecords(structPtrSlice []*T) (string, error) {
-	s := make([]map[string]any, 0)
+	s := make([]map[string]string, 0)
 	for _, structPtr := range structPtrSlice {
 		m, err := c.marshalStructPtr(structPtr)
 		if err != nil {

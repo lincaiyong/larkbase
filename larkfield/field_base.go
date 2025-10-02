@@ -1,5 +1,10 @@
 package larkfield
 
+import (
+	"encoding/json"
+	"time"
+)
+
 type BaseField struct {
 	name  string
 	type_ string
@@ -46,15 +51,29 @@ func (f *BaseField) SetDirty(v bool) {
 	f.dirty = v
 }
 
+func stringValue(value any) string {
+	if value == nil {
+		return ""
+	}
+	if v, ok := value.(string); ok {
+		return v
+	}
+	if v, ok := value.(time.Time); ok {
+		return timeToBeijingDateTimeStr(v)
+	}
+	b, _ := json.Marshal(value)
+	return string(b)
+}
+
 func (f *BaseField) StringValue() string {
-	return ""
+	return stringValue(f.value)
 }
 
 func (f *BaseField) Fork() Field {
 	panic("should not happen")
 }
 
-func (f *BaseField) Parse(v any) {
+func (f *BaseField) Parse(_ any) {
 	panic("should not happen")
 }
 
@@ -74,6 +93,10 @@ func (f HackBaseField) Type() string {
 
 func (f HackBaseField) Value() any {
 	return f.value
+}
+
+func (f HackBaseField) StringValue() string {
+	return stringValue(f.value)
 }
 
 func (f HackBaseField) Dirty() bool {
