@@ -2,6 +2,7 @@ package larkbase
 
 import (
 	"fmt"
+	"github.com/lincaiyong/larkbase/field"
 	"reflect"
 	"regexp"
 	"strings"
@@ -19,7 +20,7 @@ func extractAppTokenTableIdFromUrl(url string) (string, string) {
 }
 
 func convertToFieldType(s string) string {
-	return s[len("*field.") : len(s)-len("Field")] // a little bit hacking
+	return s[len("field.") : len(s)-len("Field")] // a little bit hacking
 }
 
 func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId string, fields []Field, err error) {
@@ -30,11 +31,11 @@ func extractTableAndFillBasicInfo(structPtr any) (tableUrl, appToken, tableId st
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structValue.Type().Field(i)
 		fieldValue := structValue.Field(i)
-		field := reflect.New(structField.Type.Elem()).Interface().(Field)
+		field := reflect.New(structField.Type).Interface().(Field)
 		field.SetName(structField.Tag.Get("lark"))
 		field.SetType(convertToFieldType(structField.Type.String()))
 		fields = append(fields, field)
-		fieldValue.Set(reflect.ValueOf(field))
+		fieldValue.Set(reflect.ValueOf(field).Elem())
 	}
 	return
 }
@@ -59,8 +60,8 @@ func checkUserStructType(structType reflect.Type) error {
 	for i := 1; i < structType.NumField(); i++ {
 		structField := structType.Field(i)
 		typeName := structField.Type.String()
-		if !strings.HasPrefix(typeName, "*field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Ptr {
-			return fmt.Errorf("field type of user struct should be larbase.XxxField, got %s", typeName)
+		if !strings.HasPrefix(typeName, "field.") || !strings.HasSuffix(typeName, "Field") || structField.Type.Kind() != reflect.Struct {
+			return fmt.Errorf("field type of user struct should be field.XxxField, got %s", typeName)
 		}
 		tag := structField.Tag.Get("lark")
 		if tag == "" {
@@ -115,12 +116,15 @@ func convertUserStructToRecord(structPtr any) (record *Record, err error) {
 			record.Id = fieldValue.Interface().(Meta).RecordId
 			continue
 		}
-		if fieldValue.IsNil() {
-			continue
-		}
+		baseField := fieldValue.Field(0)
+		hack := baseField.Convert(reflect.TypeOf(field.HackBaseField{})).Interface().(field.HackBaseField)
+		f := reflect.New(structField.Type).Interface().(Field)
 		tag := structField.Tag.Get("lark")
-		field := fieldValue.Interface().(Field)
-		record.Fields[tag] = field
+		f.SetName(hack.Name())
+		f.SetType(hack.Type())
+		f.SetUnderlayValueNoDirty(hack.Value())
+		f.SetDirty(hack.Dirty())
+		record.Fields[tag] = f
 	}
 	return
 }
@@ -152,11 +156,11 @@ func convertRecordToUserStruct(record *Record, structPtr any) error {
 			continue
 		}
 		value := f.UnderlayValue()
-		field := reflect.New(structField.Type.Elem()).Interface().(Field)
+		field := reflect.New(structField.Type).Interface().(Field)
 		field.SetName(tag)
 		field.SetType(convertToFieldType(structField.Type.String()))
 		field.SetUnderlayValueNoDirty(value)
-		fieldValue.Set(reflect.ValueOf(field))
+		fieldValue.Set(reflect.ValueOf(field).Elem())
 	}
 	return nil
 }

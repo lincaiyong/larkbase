@@ -1,6 +1,9 @@
 package field
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func (f *TextField) Build() any {
 	return nil
@@ -19,7 +22,7 @@ func (f *MultiSelectField) Build() any {
 }
 
 func (f *DateField) Build() any {
-	return nil
+	return f.value.(time.Time).UnixMilli()
 }
 
 func (f *CheckboxField) Build() any {

@@ -3,15 +3,16 @@ package larkbase
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lincaiyong/larkbase/field"
 	"reflect"
 )
 
 func marshalSliceOfUserStruct(arg any) (string, error) {
 	sliceValue := reflect.ValueOf(arg)
-	s := make([]map[string]string, 0)
+	s := make([]map[string]any, 0)
 	for i := 0; i < sliceValue.Len(); i++ {
 		elemValue := sliceValue.Index(i)
-		var m map[string]string
+		var m map[string]any
 		var err error
 		if elemValue.Kind() == reflect.Struct {
 			m, err = marshalUserStruct(elemValue)
@@ -29,8 +30,8 @@ func marshalSliceOfUserStruct(arg any) (string, error) {
 	return string(b), nil
 }
 
-func marshalUserStruct(structValue reflect.Value) (map[string]string, error) {
-	m := make(map[string]string)
+func marshalUserStruct(structValue reflect.Value) (map[string]any, error) {
+	m := make(map[string]any)
 	for j := 0; j < structValue.NumField(); j++ {
 		fieldValue := structValue.Field(j)
 		fieldType := fieldValue.Type()
@@ -39,14 +40,12 @@ func marshalUserStruct(structValue reflect.Value) (map[string]string, error) {
 			m["_record_id"] = meta.RecordId
 			continue
 		}
-		if fieldValue.IsNil() {
-			continue
-		}
-		field := fieldValue.Interface().(Field)
-		n := field.Name()
-		v := field.StringValue()
-		if v != "" {
-			m[n] = v
+		baseFieldValue := fieldValue.Field(0)
+		hack := baseFieldValue.Convert(reflect.TypeOf(field.HackBaseField{})).Interface().(field.HackBaseField)
+		name := hack.Name()
+		value := hack.Value()
+		if value != nil {
+			m[name] = value
 		}
 	}
 	return m, nil
@@ -57,7 +56,7 @@ func Marshal(obj any) (string, error) {
 	if objType.Kind() == reflect.Slice {
 		return marshalSliceOfUserStruct(obj)
 	}
-	var m map[string]string
+	var m map[string]any
 	var err error
 	if objType.Kind() == reflect.Ptr {
 		m, err = marshalUserStruct(reflect.ValueOf(obj).Elem())

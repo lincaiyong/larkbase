@@ -9,6 +9,10 @@ type DateField struct {
 	BaseField
 }
 
+func (f *DateField) SetValue(t time.Time) {
+	f.SetUnderlayValue(t)
+}
+
 func (f *DateField) IsToday() *larkbitable.Condition {
 	return filterDateIsToday(f.name)
 }

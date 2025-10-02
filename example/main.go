@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase"
 	"os"
+	"time"
 )
 
 type DemoRecord struct {
@@ -24,7 +25,7 @@ type DemoRecord struct {
 	Progress   larkbase.NumberField       `lark:"进度"`
 	Email      larkbase.TextField         `lark:"Email"`
 	Code       larkbase.TextField         `lark:"条码"`
-	Test       larkbase.NumberField       `lark:"货币"`
+	Currency   larkbase.NumberField       `lark:"货币"`
 }
 
 var (
@@ -53,6 +54,7 @@ func main() {
 	fmt.Println(s)
 
 	record.Age.SetIntValue(123456)
+	record.Date.SetValue(time.Now())
 	err = conn.UpdateOne(&record)
 	if err != nil {
 		fmt.Println(err)

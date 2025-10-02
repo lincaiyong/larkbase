@@ -9,6 +9,7 @@ type Field interface {
 	SetUnderlayValue(any)
 	SetUnderlayValueNoDirty(any)
 	Dirty() bool
+	SetDirty(v bool)
 	StringValue() string
 
 	Fork() Field
