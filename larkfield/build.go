@@ -6,7 +6,7 @@ import (
 )
 
 func (f *TextField) Build() any {
-	return nil
+	return f.value
 }
 
 func (f *NumberField) Build() any {

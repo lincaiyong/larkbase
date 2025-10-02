@@ -192,7 +192,7 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 	return "", nil
 }
 
-func (c *Connection[T]) addRecord(record *Record) error {
+func (c *Connection[T]) createRecord(record *Record) error {
 	fields, err := record.buildForLarkSuite()
 	if err != nil {
 		return err
@@ -219,6 +219,6 @@ func (c *Connection[T]) addRecord(record *Record) error {
 	if err != nil {
 		return err
 	}
-	*record = *r
+	record.Id = r.Id
 	return nil
 }

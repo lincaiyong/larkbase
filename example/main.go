@@ -42,7 +42,7 @@ func main() {
 
 	var r DemoRecord
 	r.Name.SetValue("test")
-	err = conn.AddOne(&r)
+	err = conn.Create(&r)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -54,8 +54,15 @@ func main() {
 	}
 	fmt.Println(s)
 
+	r.Name.SetValue("test2")
+	err = conn.Update(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	var record DemoRecord
-	err = conn.FindOne(&record, conn.Filter().Name.Is("andy"))
+	err = conn.Find(&record, conn.Filter().Name.Is("andy"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -69,7 +76,7 @@ func main() {
 
 	record.Age.SetIntValue(123456)
 	record.Date.SetValue(time.Now())
-	err = conn.UpdateOne(&record)
+	err = conn.Update(&record)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

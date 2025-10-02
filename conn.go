@@ -59,7 +59,7 @@ func (c *Connection[T]) IsNotFoundError(err error) bool {
 	return errors.Is(err, errorNotFound)
 }
 
-func (c *Connection[T]) FindOne(structPtr *T, filters ...*larkbitable.Condition) error {
+func (c *Connection[T]) Find(structPtr *T, filters ...*larkbitable.Condition) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
@@ -100,7 +100,7 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable
 	return c.convertRecordsToStructPtrSlicePtr(records, structPtrSlicePtr)
 }
 
-func (c *Connection[T]) UpdateOne(structPtr *T) error {
+func (c *Connection[T]) Update(structPtr *T) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
@@ -125,7 +125,7 @@ func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
 	return c.updateRecords(records)
 }
 
-func (c *Connection[T]) AddOne(structPtr *T) error {
+func (c *Connection[T]) Create(structPtr *T) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
@@ -136,7 +136,11 @@ func (c *Connection[T]) AddOne(structPtr *T) error {
 	if err != nil {
 		return err
 	}
-	return c.addRecord(record)
+	err = c.createRecord(record)
+	if err != nil {
+		return err
+	}
+	return c.convertRecordToStructPtr(record, structPtr)
 }
 
 //
