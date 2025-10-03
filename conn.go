@@ -2,9 +2,11 @@ package larkbase
 
 import (
 	"errors"
+	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
 	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
+	"strings"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
@@ -14,6 +16,32 @@ import (
 type Filter = larkbitable.FilterInfo
 type ViewFilter = larkbitable.AppTableViewPropertyFilterInfo
 type Condition = larkfield.Condition
+
+func DescribeTable(appId, appSecret, url string) (string, error) {
+	appToken, tableId := extractAppTokenTableIdFromUrl(url)
+	if appToken == "" || tableId == "" {
+		return "", fmt.Errorf("invalid table url: %s", url)
+	}
+	client := lark.NewClient(appId, appSecret)
+	fields := make(map[string]larkfield.Field)
+	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
+		return queryFieldsByPage(client, appToken, tableId, pageToken, fields)
+	})
+	if err != nil {
+		return "", err
+	}
+	var sb strings.Builder
+	sb.WriteString("type Record struct {\n")
+	sb.WriteString(fmt.Sprintf("    larkbase.Meta `lark:\"%s\"`\n\n", url))
+	for _, field := range fields {
+		switch field.Type() {
+		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Person", "Phone", "Url", "Media", "AutoNumber":
+			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", field.Name(), field.Type(), field.Name()))
+		}
+	}
+	sb.WriteString("}")
+	return sb.String(), nil
+}
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)

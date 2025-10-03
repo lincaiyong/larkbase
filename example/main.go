@@ -78,6 +78,14 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 }
 
 func main() {
+	s, err := larkbase.DescribeTable(larkAppId, larkAppSecret, "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+	return
+
 	conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
 	if err != nil {
 		fmt.Println(err)

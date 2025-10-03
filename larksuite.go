@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
+	lark "github.com/lincaiyong/larkbase/larksuite"
 	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
 	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 )
@@ -180,15 +181,15 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 	return nil
 }
 
-func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]larkfield.Field) (string, error) {
+func queryFieldsByPage(client *lark.Client, appToken, tableId, pageToken string, fields map[string]larkfield.Field) (string, error) {
 	pageSize := 100
 	req := larkbitable.NewListAppTableFieldReqBuilder().
-		AppToken(c.appToken).
-		TableId(c.tableId).
+		AppToken(appToken).
+		TableId(tableId).
 		PageToken(pageToken).
 		PageSize(pageSize).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableField.List(context.Background(), req)
+	resp, err := client.Bitable.V1.AppTableField.List(context.Background(), req)
 	if err != nil {
 		return "", fmt.Errorf("fail to call bitable list field: %v", err)
 	}
@@ -206,6 +207,10 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 		return *resp.Data.PageToken, nil
 	}
 	return "", nil
+}
+
+func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]larkfield.Field) (string, error) {
+	return queryFieldsByPage(c.client, c.appToken, c.tableId, pageToken, fields)
 }
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/create
