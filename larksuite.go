@@ -101,9 +101,13 @@ func (c *Connection[T]) queryRecordsByPage(filter *larkbitable.FilterInfo, pageT
 	if !resp.Success() {
 		return nil, "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
-	records, err = c.parseAppTableRecords(resp.Data.Items)
+	var newRecords []*Record
+	newRecords, err = c.parseAppTableRecords(resp.Data.Items)
 	if err != nil {
 		return nil, "", err
+	}
+	for _, record := range newRecords {
+		records = append(records, record)
 	}
 	if *resp.Data.HasMore {
 		return records, *resp.Data.PageToken, nil
