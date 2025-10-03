@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
-	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	"github.com/lincaiyong/larkbase/larkfield"
+	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
+	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 )
 
 func queryAllPages(f func(pageToken string) (newPageToken string, err error)) error {
@@ -341,41 +341,24 @@ func (c *Connection[T]) createView(name string) (string, error) {
 }
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-view/patch
-func (c *Connection[T]) updateView(viewId, viewName string, filter *Filter) error {
-	//req2 := larkbitable.NewPatchAppTableViewReqBuilder().
-	//	AppToken(c.appToken).
-	//	TableId(c.tableId).
-	//	ViewId(viewId).
-	//	Body(larkbitable.NewPatchAppTableViewReqBodyBuilder().
-	//		ViewName(viewName).
-	//		Property(larkbitable.NewAppTableViewPropertyBuilder().
-	//			FilterInfo(larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
-	//				Conjunction(`and`).
-	//				Conditions([]*larkbitable.AppTableViewPropertyFilterInfoCondition{
-	//					larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().
-	//						FieldId(`fldpTw2262`).
-	//						Operator(`isGreater`).
-	//						Value(`["ExactDate","1642672432000"]`).
-	//						Build(),
-	//				}).
-	//				Build()).
-	//			Build()).
-	//		Build()).
-	//	Build()
-	//
-	//// 发起请求
-	//resp, err := client.Bitable.V1.AppTableView.Patch(context.Background(), req)
-	//
-	//// 处理错误
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//
-	//// 服务端错误处理
-	//if !resp.Success() {
-	//	fmt.Printf("logId: %s, error response: \n%s", resp.RequestId(), larkcore.Prettify(resp.CodeError))
-	//	return
-	//}
+func (c *Connection[T]) updateView(viewId, viewName string, filter *ViewFilter) error {
+	req := larkbitable.NewPatchAppTableViewReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		ViewId(viewId).
+		Body(larkbitable.NewPatchAppTableViewReqBodyBuilder().
+			ViewName(viewName).
+			Property(larkbitable.NewAppTableViewPropertyBuilder().
+				FilterInfo(filter).
+				Build()).
+			Build()).
+		Build()
+	resp, err := c.client.Bitable.V1.AppTableView.Patch(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable update view: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
 	return nil
 }

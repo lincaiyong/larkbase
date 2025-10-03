@@ -3,7 +3,7 @@ package larkfield
 import (
 	"encoding/json"
 	"fmt"
-	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
+	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 	"time"
 )
 
@@ -40,10 +40,16 @@ func (c *Condition) Value() []string {
 }
 
 func (c *Condition) ToLarkCondition() *larkbitable.Condition {
+	if c.operator == ConditionOpIsEmpty || c.operator == ConditionOpIsNotEmpty {
+		return larkbitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(make([]string, 0)).Build()
+	}
 	return larkbitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(c.value).Build()
 }
 
 func (c *Condition) ToLarkViewCondition() *larkbitable.AppTableViewPropertyFilterInfoCondition {
+	if c.operator == ConditionOpIsEmpty || c.operator == ConditionOpIsNotEmpty {
+		return larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Build()
+	}
 	b, _ := json.Marshal(c.value)
 	return larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Value(string(b)).Build()
 }

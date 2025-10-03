@@ -83,75 +83,90 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	testBatch(conn)
-
-	var r DemoRecord
-	r.Name.SetValue("test")
-	err = conn.Create(&r)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	time.Sleep(3 * time.Second)
-	s, err := conn.MarshalRecord(&r)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(s)
-
-	r.Name.SetValue("test2")
-	err = conn.Update(&r)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = conn.Delete(&r)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 	var record DemoRecord
-	err = conn.Find(&record, conn.FilterAnd(conn.Condition().Name.Is("andy")))
+	err = conn.Find(&record, conn.FilterAnd(conn.Condition().Name.IsEmpty()))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	s, err = conn.MarshalRecord(&record)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(s)
+	fmt.Println(record)
 
-	record.Age.SetIntValue(123456)
-	record.Date.SetValue(time.Now())
-	err = conn.Update(&record)
+	err = conn.CreateView("empty", conn.ViewFilterAnd(conn.Condition().Name.IsEmpty()))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	var records []*DemoRecord
-	err = conn.FindAll(&records, conn.FilterAnd(conn.Condition().Name.IsNot("andy")))
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	s, err = conn.MarshalRecords(records)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(s)
-
-	for _, r := range records {
-		r.Date.SetValue(time.Now())
-	}
-	err = conn.UpdateAll(records)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	return
+	//
+	//testBatch(conn)
+	//
+	//var r DemoRecord
+	//r.Name.SetValue("test")
+	//err = conn.Create(&r)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//time.Sleep(3 * time.Second)
+	//s, err := conn.MarshalRecord(&r)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(s)
+	//
+	//r.Name.SetValue("test2")
+	//err = conn.Update(&r)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//err = conn.Delete(&r)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//var record DemoRecord
+	//err = conn.Find(&record, conn.FilterAnd(conn.Condition().Name.Is("andy")))
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//s, err = conn.MarshalRecord(&record)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(s)
+	//
+	//record.Age.SetIntValue(123456)
+	//record.Date.SetValue(time.Now())
+	//err = conn.Update(&record)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//
+	//var records []*DemoRecord
+	//err = conn.FindAll(&records, conn.FilterAnd(conn.Condition().Name.IsNot("andy")))
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//s, err = conn.MarshalRecords(records)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(s)
+	//
+	//for _, r := range records {
+	//	r.Date.SetValue(time.Now())
+	//}
+	//err = conn.UpdateAll(records)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
 }

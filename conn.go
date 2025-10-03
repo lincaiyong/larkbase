@@ -2,9 +2,9 @@ package larkbase
 
 import (
 	"errors"
-	lark "github.com/larksuite/oapi-sdk-go/v3"
-	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	"github.com/lincaiyong/larkbase/larkfield"
+	lark "github.com/lincaiyong/larkbase/larksuite"
+	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
@@ -12,6 +12,7 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
 type Filter = larkbitable.FilterInfo
+type ViewFilter = larkbitable.AppTableViewPropertyFilterInfo
 type Condition = larkfield.Condition
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
@@ -72,6 +73,26 @@ func (c *Connection[T]) FilterOr(conditions ...*Condition) *Filter {
 		s[i] = condition.ToLarkCondition()
 	}
 	return larkbitable.NewFilterInfoBuilder().
+		Conjunction(`or`).
+		Conditions(s).Build()
+}
+
+func (c *Connection[T]) ViewFilterAnd(conditions ...*Condition) *ViewFilter {
+	s := make([]*larkbitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
+	for i, condition := range conditions {
+		s[i] = condition.ToLarkViewCondition()
+	}
+	return larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
+		Conjunction(`and`).
+		Conditions(s).Build()
+}
+
+func (c *Connection[T]) ViewFilterOr(conditions ...*Condition) *ViewFilter {
+	s := make([]*larkbitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
+	for i, condition := range conditions {
+		s[i] = condition.ToLarkViewCondition()
+	}
+	return larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
 		Conjunction(`or`).
 		Conditions(s).Build()
 }
@@ -218,7 +239,7 @@ func (c *Connection[T]) DeleteAll(structPtrSlice []*T) error {
 	return nil
 }
 
-func (c *Connection[T]) CreateView(name string, filter *Filter) error {
+func (c *Connection[T]) CreateView(name string, filter *ViewFilter) error {
 	viewId, err := c.createView(name)
 	if err != nil {
 		return err

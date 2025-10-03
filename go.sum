@@ -2,8 +2,8 @@ github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
-github.com/larksuite/oapi-sdk-go/v3 v3.4.25 h1:Hf4FBpTwYwjiAkdIaf2+TixQ7/iuQMnaw6/K0PxIhm0=
-github.com/larksuite/oapi-sdk-go/v3 v3.4.25/go.mod h1:ZEplY+kwuIrj/nqw5uSCINNATcH3KdxSN7y+UxYY5fI=
+github.com/lincaiyong/larkbase/larksuite v3.4.25 h1:Hf4FBpTwYwjiAkdIaf2+TixQ7/iuQMnaw6/K0PxIhm0=
+github.com/lincaiyong/larkbase/larksuite v3.4.25/go.mod h1:ZEplY+kwuIrj/nqw5uSCINNATcH3KdxSN7y+UxYY5fI=
 github.com/lincaiyong/log v0.0.0-20250929160056-7d399ec7ee57 h1:cvqNGG08ytTixRksEGQhOdP7W1/U+G/y01yu3jMXBws=
 github.com/lincaiyong/log v0.0.0-20250929160056-7d399ec7ee57/go.mod h1:FMN0b4siU9J85Yx0AHjQa6HjzkQC4M6YZ75i3SJclgE=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
