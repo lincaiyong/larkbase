@@ -12,7 +12,7 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
 type Filter = larkbitable.FilterInfo
-type Condition = larkbitable.Condition
+type Condition = larkfield.Condition
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)
@@ -57,15 +57,23 @@ func (c *Connection[T]) Condition() *T {
 }
 
 func (c *Connection[T]) FilterAnd(conditions ...*Condition) *Filter {
+	s := make([]*larkbitable.Condition, len(conditions))
+	for i, condition := range conditions {
+		s[i] = condition.ToLarkCondition()
+	}
 	return larkbitable.NewFilterInfoBuilder().
 		Conjunction(`and`).
-		Conditions(conditions).Build()
+		Conditions(s).Build()
 }
 
 func (c *Connection[T]) FilterOr(conditions ...*Condition) *Filter {
+	s := make([]*larkbitable.Condition, len(conditions))
+	for i, condition := range conditions {
+		s[i] = condition.ToLarkCondition()
+	}
 	return larkbitable.NewFilterInfoBuilder().
 		Conjunction(`or`).
-		Conditions(conditions).Build()
+		Conditions(s).Build()
 }
 
 var errorNotFound = errors.New("record not found")
@@ -204,6 +212,18 @@ func (c *Connection[T]) DeleteAll(structPtrSlice []*T) error {
 		return err
 	}
 	err = c.deleteRecords(records)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Connection[T]) CreateView(name string, filter *Filter) error {
+	viewId, err := c.createView(name)
+	if err != nil {
+		return err
+	}
+	err = c.updateView(viewId, name, filter)
 	if err != nil {
 		return err
 	}

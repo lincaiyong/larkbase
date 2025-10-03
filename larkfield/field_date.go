@@ -1,7 +1,6 @@
 package larkfield
 
 import (
-	larkbitable "github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1"
 	"time"
 )
 
@@ -13,77 +12,77 @@ func (f *DateField) SetValue(t time.Time) {
 	f.SetUnderlayValue(t)
 }
 
-func (f *DateField) IsToday() *larkbitable.Condition {
-	return filterDateIsToday(f.name)
+func (f *DateField) IsToday() *Condition {
+	return conditionDateIsToday(f.id, f.name)
 }
-func (f *DateField) IsTomorrow() *larkbitable.Condition {
-	return filterDateIsTomorrow(f.name)
+func (f *DateField) IsTomorrow() *Condition {
+	return conditionDateIsTomorrow(f.id, f.name)
 }
-func (f *DateField) IsYesterday() *larkbitable.Condition {
-	return filterDateIsYesterday(f.name)
+func (f *DateField) IsYesterday() *Condition {
+	return conditionDateIsYesterday(f.id, f.name)
 }
-func (f *DateField) Is(time time.Time) *larkbitable.Condition {
-	return filterDateIs(f.name, time)
+func (f *DateField) Is(time time.Time) *Condition {
+	return conditionDateIs(f.id, f.name, time)
 }
-func (f *DateField) IsGreaterThanToday() *larkbitable.Condition {
-	return filterDateIsGreaterThanToday(f.name)
+func (f *DateField) IsGreaterThanToday() *Condition {
+	return conditionDateIsGreaterThanToday(f.id, f.name)
 }
-func (f *DateField) IsGreaterThanTomorrow() *larkbitable.Condition {
-	return filterDateIsGreaterThanTomorrow(f.name)
+func (f *DateField) IsGreaterThanTomorrow() *Condition {
+	return conditionDateIsGreaterThanTomorrow(f.id, f.name)
 }
-func (f *DateField) IsGreaterThanYesterday() *larkbitable.Condition {
-	return filterDateIsGreaterThanYesterday(f.name)
+func (f *DateField) IsGreaterThanYesterday() *Condition {
+	return conditionDateIsGreaterThanYesterday(f.id, f.name)
 }
-func (f *DateField) IsGreater(time time.Time) *larkbitable.Condition {
-	return filterDateIsGreater(f.name, time)
+func (f *DateField) IsGreater(time time.Time) *Condition {
+	return conditionDateIsGreater(f.id, f.name, time)
 }
-func (f *DateField) IsLessThanToday() *larkbitable.Condition {
-	return filterDateIsLessThanToday(f.name)
+func (f *DateField) IsLessThanToday() *Condition {
+	return conditionDateIsLessThanToday(f.id, f.name)
 }
-func (f *DateField) IsLessThanTomorrow() *larkbitable.Condition {
-	return filterDateIsLessThanTomorrow(f.name)
+func (f *DateField) IsLessThanTomorrow() *Condition {
+	return conditionDateIsLessThanTomorrow(f.id, f.name)
 }
-func (f *DateField) IsLessThanYesterday() *larkbitable.Condition {
-	return filterDateIsLessThanYesterday(f.name)
-}
-
-func (f *DateField) IsLess(time time.Time) *larkbitable.Condition {
-	return filterDateIsLess(f.name, time)
-}
-func (f *DateField) IsEmpty() *larkbitable.Condition {
-	return filterIsEmpty(f.name)
-}
-func (f *DateField) IsNotEmpty() *larkbitable.Condition {
-	return filterIsNotEmpty(f.name)
+func (f *DateField) IsLessThanYesterday() *Condition {
+	return conditionDateIsLessThanYesterday(f.id, f.name)
 }
 
-func (f *DateField) IsCurrentWeek() *larkbitable.Condition {
-	return filterDateIsCurrentWeek(f.name)
+func (f *DateField) IsLess(time time.Time) *Condition {
+	return conditionDateIsLess(f.id, f.name, time)
+}
+func (f *DateField) IsEmpty() *Condition {
+	return conditionIsEmpty(f.id, f.name)
+}
+func (f *DateField) IsNotEmpty() *Condition {
+	return conditionIsNotEmpty(f.id, f.name)
 }
 
-func (f *DateField) IsLastWeek() *larkbitable.Condition {
-	return filterDateIsLastWeek(f.name)
-}
-func (f *DateField) IsCurrentMonth() *larkbitable.Condition {
-	return filterDateIsCurrentMonth(f.name)
+func (f *DateField) IsCurrentWeek() *Condition {
+	return conditionDateIsCurrentWeek(f.id, f.name)
 }
 
-func (f *DateField) IsLastMonth() *larkbitable.Condition {
-	return filterDateIsLastMonth(f.name)
+func (f *DateField) IsLastWeek() *Condition {
+	return conditionDateIsLastWeek(f.id, f.name)
+}
+func (f *DateField) IsCurrentMonth() *Condition {
+	return conditionDateIsCurrentMonth(f.id, f.name)
 }
 
-func (f *DateField) IsTheLastWeek() *larkbitable.Condition {
-	return filterDateIsTheLastWeek(f.name)
+func (f *DateField) IsLastMonth() *Condition {
+	return conditionDateIsLastMonth(f.id, f.name)
 }
 
-func (f *DateField) TheNextWeek() *larkbitable.Condition {
-	return filterDateTheNextWeek(f.name)
+func (f *DateField) IsTheLastWeek() *Condition {
+	return conditionDateIsTheLastWeek(f.id, f.name)
 }
 
-func (f *DateField) IsTheLastMonth() *larkbitable.Condition {
-	return filterDateIsTheLastMonth(f.name)
+func (f *DateField) TheNextWeek() *Condition {
+	return conditionDateTheNextWeek(f.id, f.name)
 }
 
-func (f *DateField) TheNextMonth() *larkbitable.Condition {
-	return filterDateTheNextMonth(f.name)
+func (f *DateField) IsTheLastMonth() *Condition {
+	return conditionDateIsTheLastMonth(f.id, f.name)
+}
+
+func (f *DateField) TheNextMonth() *Condition {
+	return conditionDateTheNextMonth(f.id, f.name)
 }

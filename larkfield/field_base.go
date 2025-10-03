@@ -5,11 +5,28 @@ import (
 	"time"
 )
 
+func NewBaseField(id, name, type_ string) *BaseField {
+	return &BaseField{
+		id:    id,
+		name:  name,
+		type_: type_,
+	}
+}
+
 type BaseField struct {
+	id    string
 	name  string
 	type_ string
 	value any
 	dirty bool
+}
+
+func (f *BaseField) Id() string {
+	return f.id
+}
+
+func (f *BaseField) SetId(v string) {
+	f.id = v
 }
 
 func (f *BaseField) Name() string {
@@ -73,8 +90,9 @@ func (f *BaseField) Fork() Field {
 	panic("should not happen")
 }
 
-func (f *BaseField) Parse(_ any) {
+func (f *BaseField) Parse(_ any) error {
 	panic("should not happen")
+	return nil
 }
 
 func (f *BaseField) Build() any {
@@ -82,6 +100,10 @@ func (f *BaseField) Build() any {
 }
 
 type HackBaseField BaseField
+
+func (f HackBaseField) Id() string {
+	return f.id
+}
 
 func (f HackBaseField) Name() string {
 	return f.name

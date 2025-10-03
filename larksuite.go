@@ -25,7 +25,7 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 }
 
 func (c *Connection[T]) checkFields() error {
-	fields := make(map[string]larkfield.Type)
+	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
 		return c.queryFieldsByPage(pageToken, fields)
 	})
@@ -37,9 +37,10 @@ func (c *Connection[T]) checkFields() error {
 		if !ok {
 			return fmt.Errorf("field %s is not found in larkbase table: %s", name, c.tableUrl)
 		}
-		if structField.Type() != f.String() {
-			return fmt.Errorf("field %s in larkbase table %s has type %s, not %s", name, c.tableUrl, f.String(), structField.Type())
+		if structField.Type() != f.Type() {
+			return fmt.Errorf("field %s in larkbase table %s has type %s, not %s", name, c.tableUrl, f.Type(), structField.Type())
 		}
+		structField.SetId(f.Id())
 	}
 	return nil
 }
@@ -175,7 +176,7 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 	return nil
 }
 
-func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]larkfield.Type) (string, error) {
+func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]larkfield.Field) (string, error) {
 	pageSize := 100
 	req := larkbitable.NewListAppTableFieldReqBuilder().
 		AppToken(c.appToken).
@@ -191,7 +192,10 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	for _, item := range resp.Data.Items {
-		fields[*item.FieldName] = larkfield.Type(*item.Type)
+		id := *item.FieldId
+		name := *item.FieldName
+		type_ := larkfield.Type(*item.Type).String()
+		fields[*item.FieldName] = larkfield.NewBaseField(id, name, type_)
 	}
 	hasMore := *resp.Data.HasMore
 	if hasMore {
@@ -312,5 +316,66 @@ func (c *Connection[T]) deleteRecords(records []*Record) error {
 	if !resp.Success() {
 		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
+	return nil
+}
+
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-view/create
+func (c *Connection[T]) createView(name string) (string, error) {
+	req := larkbitable.NewCreateAppTableViewReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		ReqView(larkbitable.NewReqViewBuilder().
+			ViewName(name).
+			ViewType(`grid`).
+			Build()).
+		Build()
+	resp, err := c.client.Bitable.V1.AppTableView.Create(context.Background(), req)
+	if err != nil {
+		return "", fmt.Errorf("fail to call bitable create view: %v", err)
+	}
+	if !resp.Success() {
+		return "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	viewId := *resp.Data.View.ViewId
+	return viewId, nil
+}
+
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-view/patch
+func (c *Connection[T]) updateView(viewId, viewName string, filter *Filter) error {
+	//req2 := larkbitable.NewPatchAppTableViewReqBuilder().
+	//	AppToken(c.appToken).
+	//	TableId(c.tableId).
+	//	ViewId(viewId).
+	//	Body(larkbitable.NewPatchAppTableViewReqBodyBuilder().
+	//		ViewName(viewName).
+	//		Property(larkbitable.NewAppTableViewPropertyBuilder().
+	//			FilterInfo(larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
+	//				Conjunction(`and`).
+	//				Conditions([]*larkbitable.AppTableViewPropertyFilterInfoCondition{
+	//					larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().
+	//						FieldId(`fldpTw2262`).
+	//						Operator(`isGreater`).
+	//						Value(`["ExactDate","1642672432000"]`).
+	//						Build(),
+	//				}).
+	//				Build()).
+	//			Build()).
+	//		Build()).
+	//	Build()
+	//
+	//// 发起请求
+	//resp, err := client.Bitable.V1.AppTableView.Patch(context.Background(), req)
+	//
+	//// 处理错误
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//
+	//// 服务端错误处理
+	//if !resp.Success() {
+	//	fmt.Printf("logId: %s, error response: \n%s", resp.RequestId(), larkcore.Prettify(resp.CodeError))
+	//	return
+	//}
 	return nil
 }
