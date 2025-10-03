@@ -33,11 +33,10 @@ func (f *TextField) Parse(v any) error {
 
 			}
 		}
-		if len(items) > 1 {
-			return fmt.Errorf("fail to handle text field with more than 1 item: %s", strings.Join(items, ","))
-		}
 		if len(items) == 1 {
 			f.value = items[0]
+		} else if len(items) > 1 {
+			f.value = strings.Join(items, "")
 		}
 		return nil
 	}
