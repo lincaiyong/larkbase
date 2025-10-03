@@ -272,6 +272,7 @@ func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 	return ret, nil
 }
 
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/delete
 func (c *Connection[T]) deleteRecord(record *Record) error {
 	if record.Id == "" {
 		return fmt.Errorf("record id is empty")
@@ -281,6 +282,33 @@ func (c *Connection[T]) deleteRecord(record *Record) error {
 		RecordId(record.Id)
 	req := builder.Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.Delete(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("fail to call bitable delete record: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	return nil
+}
+
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_delete
+func (c *Connection[T]) deleteRecords(records []*Record) error {
+	recordIds := make([]string, 0, len(records))
+	for _, record := range records {
+		if record.Id == "" {
+			continue
+		}
+		recordIds = append(recordIds, record.Id)
+	}
+	if len(recordIds) == 0 {
+		return fmt.Errorf("fail to delete records: empty records")
+	}
+	req := larkbitable.NewBatchDeleteAppTableRecordReqBuilder().
+		AppToken(c.appToken).TableId(c.tableId).
+		Body(larkbitable.NewBatchDeleteAppTableRecordReqBodyBuilder().
+			Records(recordIds).
+			Build()).Build()
+	resp, err := c.client.Bitable.V1.AppTableRecord.BatchDelete(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("fail to call bitable delete record: %v", err)
 	}

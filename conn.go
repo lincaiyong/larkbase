@@ -143,19 +143,23 @@ func (c *Connection[T]) Create(structPtr *T) error {
 	return c.convertRecordToStructPtr(record, structPtr)
 }
 
-func (c *Connection[T]) CreateAll(structPtrSlice []*T) error {
+func (c *Connection[T]) CreateAll(structPtrSlice []*T) ([]*T, error) {
 	if err := c.fillStructPtrSlice(structPtrSlice); err != nil {
-		return err
+		return nil, err
 	}
 	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	records, err = c.createRecords(records)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return c.convertRecordsToStructPtrSlicePtr(records, &structPtrSlice)
+	err = c.convertRecordsToStructPtrSlicePtr(records, &structPtrSlice)
+	if err != nil {
+		return nil, err
+	}
+	return structPtrSlice, nil
 }
 
 func (c *Connection[T]) Delete(structPtr *T) error {
@@ -170,6 +174,21 @@ func (c *Connection[T]) Delete(structPtr *T) error {
 		return err
 	}
 	err = c.deleteRecord(record)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Connection[T]) DeleteAll(structPtrSlice []*T) error {
+	if err := c.fillStructPtrSlice(structPtrSlice); err != nil {
+		return err
+	}
+	records, err := c.convertStructPtrSliceToRecords(structPtrSlice)
+	if err != nil {
+		return err
+	}
+	err = c.deleteRecords(records)
 	if err != nil {
 		return err
 	}

@@ -33,6 +33,39 @@ var (
 	larkAppSecret = os.Getenv("LARK_APP_SECRET")
 )
 
+func testBatch(conn *larkbase.Connection[DemoRecord]) {
+	records := make([]*DemoRecord, 0)
+	for i := 0; i < 10; i++ {
+		record := &DemoRecord{}
+		record.Name.SetValue(fmt.Sprintf("test-%d", i))
+		records = append(records, record)
+	}
+	var err error
+	records, err = conn.CreateAll(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	for _, record := range records {
+		fmt.Println(record.RecordId)
+	}
+	time.Sleep(3 * time.Second)
+	for i, record := range records {
+		record.Age.SetIntValue(20 + i)
+	}
+	err = conn.UpdateAll(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	time.Sleep(3 * time.Second)
+	err = conn.DeleteAll(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
 func main() {
 	conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
 	if err != nil {
@@ -40,10 +73,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	testBatch(conn)
+	return
+
 	var r DemoRecord
 	r.Name.SetValue("test")
-	//err = conn.Create(&r)
-	err = conn.CreateAll([]*DemoRecord{&r, &r})
+	err = conn.Create(&r)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

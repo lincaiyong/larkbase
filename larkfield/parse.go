@@ -39,8 +39,13 @@ func (f *TextField) Parse(v any) error {
 		if len(items) == 1 {
 			f.value = items[0]
 		}
+		return nil
 	}
-	return nil
+	if v1, ok1 := v.(string); ok1 {
+		f.value = v1
+		return nil
+	}
+	return fmt.Errorf("fail to handle value of type %T", v)
 }
 
 func (f *NumberField) Parse(v any) error {
