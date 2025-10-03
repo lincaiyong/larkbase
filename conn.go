@@ -136,7 +136,7 @@ func (c *Connection[T]) Create(structPtr *T) error {
 	if err != nil {
 		return err
 	}
-	err = c.createRecord(record)
+	record, err = c.createRecord(record)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Connection[T]) CreateAll(structPtrSlice []*T) error {
 	if err != nil {
 		return err
 	}
-	err = c.createRecords(records)
+	records, err = c.createRecords(records)
 	if err != nil {
 		return err
 	}

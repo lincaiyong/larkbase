@@ -63,6 +63,18 @@ func (c *Connection[T]) parseAppTableRecord(item *larkbitable.AppTableRecord) (*
 	return record, nil
 }
 
+func (c *Connection[T]) parseAppTableRecords(items []*larkbitable.AppTableRecord) ([]*Record, error) {
+	records := make([]*Record, 0, len(items))
+	for _, item := range items {
+		record, err := c.parseAppTableRecord(item)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, record)
+	}
+	return records, nil
+}
+
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
 	if pageSize == 0 {
@@ -91,13 +103,9 @@ func (c *Connection[T]) queryRecordsByPage(filters []*larkbitable.Condition, pag
 	if !resp.Success() {
 		return nil, "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
-	for _, item := range resp.Data.Items {
-		var record *Record
-		record, err = c.parseAppTableRecord(item)
-		if err != nil {
-			return nil, "", err
-		}
-		records = append(records, record)
+	records, err = c.parseAppTableRecords(resp.Data.Items)
+	if err != nil {
+		return nil, "", err
 	}
 	if *resp.Data.HasMore {
 		return records, *resp.Data.PageToken, nil
@@ -196,13 +204,13 @@ func (c *Connection[T]) queryFieldsByPage(pageToken string, fields map[string]la
 }
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/create
-func (c *Connection[T]) createRecord(record *Record) error {
+func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 	fields, err := record.buildForLarkSuite()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(fields) == 0 {
-		return errors.New("empty fields")
+		return nil, errors.New("fail to create record: empty fields")
 	}
 	req := larkbitable.NewCreateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
@@ -213,27 +221,26 @@ func (c *Connection[T]) createRecord(record *Record) error {
 		Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.Create(context.Background(), req)
 	if err != nil {
-		return fmt.Errorf("fail to call bitable create record: %v", err)
+		return nil, fmt.Errorf("fail to call bitable create record: %v", err)
 	}
 	if !resp.Success() {
-		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+		return nil, fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
-	var r *Record
-	r, err = c.parseAppTableRecord(resp.Data.Record)
+	var ret *Record
+	ret, err = c.parseAppTableRecord(resp.Data.Record)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	record.Id = r.Id
-	return nil
+	return ret, nil
 }
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_create
-func (c *Connection[T]) createRecords(records []*Record) error {
+func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 	reqRecords := make([]*larkbitable.AppTableRecord, 0, len(records))
 	for _, record := range records {
 		fields, err := record.buildForLarkSuite()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if len(fields) == 0 {
 			continue
@@ -243,7 +250,7 @@ func (c *Connection[T]) createRecords(records []*Record) error {
 			Build())
 	}
 	if len(reqRecords) == 0 {
-		return fmt.Errorf("empty records")
+		return nil, fmt.Errorf("fail to create records: empty records")
 	}
 	req := larkbitable.NewBatchCreateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
@@ -252,18 +259,17 @@ func (c *Connection[T]) createRecords(records []*Record) error {
 		Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.BatchCreate(context.Background(), req)
 	if err != nil {
-		return fmt.Errorf("fail to call bitable create record: %v", err)
+		return nil, fmt.Errorf("fail to call bitable create record: %v", err)
 	}
 	if !resp.Success() {
-		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+		return nil, fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
-	//var r *Record
-	//r, err = c.parseAppTableRecord(resp.Data.Records)
-	//if err != nil {
-	//	return err
-	//}
-	//record.Id = r.Id
-	return nil
+	var ret []*Record
+	ret, err = c.parseAppTableRecords(resp.Data.Records)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
 }
 
 func (c *Connection[T]) deleteRecord(record *Record) error {
