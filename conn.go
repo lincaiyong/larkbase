@@ -13,12 +13,12 @@ import (
 
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)
-	conn := &Connection[T]{filter: structPtr}
+	conn := &Connection[T]{condition: structPtr}
 	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
 	}
 	var err error
-	conn.tableUrl, conn.appToken, conn.tableId, conn.fields, err = conn.extractAndFillFilterInstance(structPtr)
+	conn.tableUrl, conn.appToken, conn.tableId, conn.fields, err = conn.extractAndFillConditionInstance(structPtr)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 type Connection[T any] struct {
 	client *lark.Client
 
-	filter *T
+	condition *T
 
 	tableUrl   string
 	appToken   string
@@ -49,8 +49,20 @@ type Connection[T any] struct {
 	fieldMap   map[string]larkfield.Field
 }
 
-func (c *Connection[T]) Filter() *T {
-	return c.filter
+func (c *Connection[T]) Condition() *T {
+	return c.condition
+}
+
+func (c *Connection[T]) FilterAnd(conditions ...*larkbitable.Condition) *larkbitable.FilterInfo {
+	return larkbitable.NewFilterInfoBuilder().
+		Conjunction(`and`).
+		Conditions(conditions).Build()
+}
+
+func (c *Connection[T]) FilterOr(conditions ...*larkbitable.Condition) *larkbitable.FilterInfo {
+	return larkbitable.NewFilterInfoBuilder().
+		Conjunction(`or`).
+		Conditions(conditions).Build()
 }
 
 var errorNotFound = errors.New("record not found")
@@ -59,7 +71,7 @@ func (c *Connection[T]) IsNotFoundError(err error) bool {
 	return errors.Is(err, errorNotFound)
 }
 
-func (c *Connection[T]) Find(structPtr *T, filters ...*larkbitable.Condition) error {
+func (c *Connection[T]) Find(structPtr *T, filter *larkbitable.FilterInfo) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
@@ -68,7 +80,7 @@ func (c *Connection[T]) Find(structPtr *T, filters ...*larkbitable.Condition) er
 	}
 	var err error
 	records := make([]*Record, 0)
-	records, _, err = c.queryRecordsByPage(filters, "", 1, records)
+	records, _, err = c.queryRecordsByPage(filter, "", 1, records)
 	if err != nil {
 		return err
 	}
@@ -83,7 +95,7 @@ func (c *Connection[T]) Find(structPtr *T, filters ...*larkbitable.Condition) er
 	return nil
 }
 
-func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable.Condition) error {
+func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filter *larkbitable.FilterInfo) error {
 	if structPtrSlicePtr == nil {
 		return errors.New("structSlicePtr is nil")
 	}
@@ -92,7 +104,7 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filters ...*larkbitable
 	}
 	records := make([]*Record, 0)
 	if err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		records, newPageToken, err = c.queryRecordsByPage(filters, pageToken, 0, records)
+		records, newPageToken, err = c.queryRecordsByPage(filter, pageToken, 0, records)
 		return
 	}); err != nil {
 		return err

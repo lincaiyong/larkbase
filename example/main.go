@@ -102,7 +102,7 @@ func main() {
 		os.Exit(1)
 	}
 	var record DemoRecord
-	err = conn.Find(&record, conn.Filter().Name.Is("andy"))
+	err = conn.Find(&record, conn.FilterAnd(conn.Condition().Name.Is("andy")))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -123,7 +123,7 @@ func main() {
 	}
 
 	var records []*DemoRecord
-	err = conn.FindAll(&records, conn.Filter().Name.IsNot("andy"))
+	err = conn.FindAll(&records, conn.FilterAnd(conn.Condition().Name.IsNot("andy")))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

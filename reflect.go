@@ -30,7 +30,7 @@ func convertToFieldType(s string) string {
 	return s[len("larkfield.") : len(s)-len("Field")] // a little bit hacking
 }
 
-func (c *Connection[T]) extractAndFillFilterInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []larkfield.Field, err error) {
+func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T) (tableUrl, appToken, tableId string, fields []larkfield.Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	structType := structValue.Type()
 	metaField := structType.Field(0)
