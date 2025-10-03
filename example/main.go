@@ -74,7 +74,6 @@ func main() {
 	}
 
 	testBatch(conn)
-	return
 
 	var r DemoRecord
 	r.Name.SetValue("test")
@@ -83,6 +82,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	time.Sleep(3 * time.Second)
 	s, err := conn.MarshalRecord(&r)
 	if err != nil {
 		fmt.Println(err)
@@ -96,13 +96,11 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	err = conn.Delete(&r)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	var record DemoRecord
 	err = conn.Find(&record, conn.Filter().Name.Is("andy"))
 	if err != nil {
