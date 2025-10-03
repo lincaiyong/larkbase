@@ -49,6 +49,17 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	for _, record := range records {
 		fmt.Println(record.RecordId)
 	}
+	var results []*DemoRecord
+	conditions := make([]*larkbase.Condition, 0)
+	for i := range records {
+		conditions = append(conditions, conn.Condition().Name.Is(fmt.Sprintf("test-%d", i)))
+	}
+	err = conn.FindAll(&results, conn.FilterOr(conditions...))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(results)
 	time.Sleep(3 * time.Second)
 	for i, record := range records {
 		record.Age.SetIntValue(20 + i)

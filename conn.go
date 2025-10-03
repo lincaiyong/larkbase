@@ -11,6 +11,9 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
+type Filter = larkbitable.FilterInfo
+type Condition = larkbitable.Condition
+
 func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)
 	conn := &Connection[T]{condition: structPtr}
@@ -53,13 +56,13 @@ func (c *Connection[T]) Condition() *T {
 	return c.condition
 }
 
-func (c *Connection[T]) FilterAnd(conditions ...*larkbitable.Condition) *larkbitable.FilterInfo {
+func (c *Connection[T]) FilterAnd(conditions ...*Condition) *Filter {
 	return larkbitable.NewFilterInfoBuilder().
 		Conjunction(`and`).
 		Conditions(conditions).Build()
 }
 
-func (c *Connection[T]) FilterOr(conditions ...*larkbitable.Condition) *larkbitable.FilterInfo {
+func (c *Connection[T]) FilterOr(conditions ...*Condition) *Filter {
 	return larkbitable.NewFilterInfoBuilder().
 		Conjunction(`or`).
 		Conditions(conditions).Build()
