@@ -91,7 +91,7 @@ func main() {
 	}
 	fmt.Println(record)
 
-	err = conn.CreateView("empty", conn.ViewFilterAnd(conn.Condition().Name.IsEmpty()))
+	err = conn.CreateView("empty", conn.ViewFilterAnd(conn.Condition().Name.IsNotEmpty()))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
