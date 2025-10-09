@@ -28,7 +28,7 @@ type DemoRecord struct {
 	Code         larkbase.BarcodeField      `lark:"条码"`
 	Currency     larkbase.CurrencyField     `lark:"货币"`
 	Rating       larkbase.RatingField       `lark:"评分"`
-	ModifiedTime larkbase.NumberField       `lark:"modified_time"`
+	ModifiedTime larkbase.ModifiedTimeField `lark:"modified_time"`
 }
 
 var (

@@ -6,8 +6,10 @@ import (
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
 	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
+	"github.com/lincaiyong/log"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
@@ -17,6 +19,8 @@ import (
 type Filter = larkbitable.FilterInfo
 type ViewFilter = larkbitable.AppTableViewPropertyFilterInfo
 type Condition = larkfield.Condition
+
+const modifiedTimeFieldName = "modified_time"
 
 func DescribeTable(appId, appSecret, url string) (string, error) {
 	appToken, tableId := extractAppTokenTableIdFromUrl(url)
@@ -300,6 +304,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	tableName := strings.ToLower(c.structName)
 	sql := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (`record_id` VARCHAR(255) PRIMARY KEY, %s)",
 		tableName, strings.Join(items, ", "))
+	log.InfoLog("sql: %s", sql)
 	if err := db.Exec(sql).Error; err != nil {
 		return err
 	}
@@ -308,27 +313,58 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	if err := db.Raw(sql).Scan(&count).Error; err != nil {
 		return err
 	}
-	latestModifiedTime := "0"
+	log.InfoLog("count: %d", count)
+	var latestModifiedTime *time.Time
 	if count > 0 {
 		sql = fmt.Sprintf("SELECT MAX(modified_time) FROM `%s`", tableName)
-		result := db.Raw(sql).Scan(&latestModifiedTime)
+		var latestModifiedTimeStr string
+		result := db.Raw(sql).Scan(&latestModifiedTimeStr)
 		if result.Error != nil {
 			return result.Error
 		}
+		t, err := larkfield.BeijingDateTimeStrToTime(latestModifiedTimeStr)
+		if err != nil {
+			return err
+		}
+		latestModifiedTime = &t
+		log.InfoLog("latestModifiedTime: %s", latestModifiedTimeStr)
 	}
-	var records []*T
-	field := c.fieldMap[larkfield.ModifiedTimeFieldName]
-	condition := larkfield.NewCondition(field.Id(), field.Name(), larkfield.ConditionOpIsGreater, []string{latestModifiedTime})
-	err := c.FindAll(&records, c.FilterAnd(condition))
+	var filter *larkbitable.FilterInfo
+	if latestModifiedTime != nil {
+		field := c.fieldMap[modifiedTimeFieldName].(*larkfield.ModifiedTimeField)
+		filter = c.FilterAnd(field.IsGreater(*latestModifiedTime))
+	}
+	var rawRecords []*T
+	err := c.FindAll(&rawRecords, filter)
 	if err != nil {
 		return err
 	}
+	log.InfoLog("rawRecords count: %d", len(rawRecords))
+	var records []*Record
+	for _, rawRecord := range rawRecords {
+		record, convErr := c.convertStructPtrToRecord(rawRecord)
+		if convErr != nil {
+			return convErr
+		}
+		if latestModifiedTime != nil {
+			if !record.ModifiedTime.After(*latestModifiedTime) {
+				continue
+			}
+		}
+		records = append(records, record)
+	}
+	log.InfoLog("records count: %d", len(records))
 	if len(records) > 0 {
 		if batchSize == 0 {
 			batchSize = len(records)
 		}
 		for i := 0; i < len(records)/batchSize; i++ {
-			batchRecords := records[i*batchSize : (i+1)*batchSize]
+			var batchRecords []*Record
+			if (i+1)*batchSize > len(records) {
+				batchRecords = records[i*batchSize:]
+			} else {
+				batchRecords = records[i*batchSize : (i+1)*batchSize]
+			}
 			columns := []string{"`record_id`"}
 			for _, name := range c.fieldNames {
 				columns = append(columns, fmt.Sprintf("`%s`", name))
@@ -336,15 +372,11 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 			values := make([]any, 0)
 			valuesPlaceHolders := make([]string, 0, len(batchRecords))
 			for _, record := range batchRecords {
-				larkRecord, convErr := c.convertStructPtrToRecord(record)
-				if convErr != nil {
-					return convErr
-				}
 				placeholders := []string{"?"}
-				values = append(values, larkRecord.Id)
+				values = append(values, record.Id)
 				for _, fieldName := range c.fieldNames {
 					placeholders = append(placeholders, "?")
-					values = append(values, larkRecord.Fields[fieldName].StringValue())
+					values = append(values, record.Fields[fieldName].StringValue())
 				}
 				valuesPlaceHolders = append(valuesPlaceHolders, fmt.Sprintf("(%s)", strings.Join(placeholders, ", ")))
 			}
@@ -357,10 +389,13 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 				strings.Join(columns, ", "),
 				strings.Join(valuesPlaceHolders, ", "),
 				strings.Join(updateItems, ", "))
+			log.InfoLog("sql: %s", sql)
 			if err = db.Exec(sql, values...).Error; err != nil {
 				return err
 			}
+			log.InfoLog("insert or update %d records", len(batchRecords))
 		}
 	}
+	log.InfoLog("successfully sync larkbase to database")
 	return nil
 }

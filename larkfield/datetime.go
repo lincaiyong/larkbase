@@ -22,7 +22,7 @@ func beijingDateTimeStrToUnixSeconds(s string) (int64, error) {
 	return t.Unix(), nil
 }
 
-func beijingDateTimeStrToTime(s string) (time.Time, error) {
+func BeijingDateTimeStrToTime(s string) (time.Time, error) {
 	return time.ParseInLocation(dateTimeLayout, s, beijingTZ)
 }
 

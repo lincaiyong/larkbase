@@ -218,3 +218,12 @@ func (f *ButtonField) Parse(_ any) error {
 	log.WarnLog("%s field parse skipped", f.type_)
 	return nil
 }
+
+func (f *ModifiedTimeField) Parse(v any) error {
+	if v1, ok1 := v.(float64); ok1 {
+		f.value = UnixSecondsToTime(int64(v1 / 1000))
+		return nil
+	} else {
+		return parseError(f.type_, "float64", v)
+	}
+}

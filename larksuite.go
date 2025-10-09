@@ -9,7 +9,6 @@ import (
 	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
 	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 	"github.com/lincaiyong/log"
-	"time"
 )
 
 func queryAllPages(f func(pageToken string) (newPageToken string, err error)) error {
@@ -28,8 +27,8 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 }
 
 func (c *Connection[T]) checkFields() error {
-	if c.fieldMap[larkfield.ModifiedTimeFieldName] == nil || c.fieldMap[larkfield.ModifiedTimeFieldName].Type() != "Number" {
-		return fmt.Errorf("field \"%s\" with Number type is required in struct: %s", larkfield.ModifiedTimeFieldName, c.structName)
+	if c.fieldMap[modifiedTimeFieldName] == nil || c.fieldMap[modifiedTimeFieldName].Type() != "ModifiedTime" {
+		return fmt.Errorf("field \"%s\" with ModifiedTime type is required in struct: %s", modifiedTimeFieldName, c.structName)
 	}
 	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
@@ -38,8 +37,8 @@ func (c *Connection[T]) checkFields() error {
 	if err != nil {
 		return err
 	}
-	if c.fieldMap[larkfield.ModifiedTimeFieldName].Type() != "Number" {
-		return fmt.Errorf("field \"%s\" with Number type is required in larkbase table: %s", larkfield.ModifiedTimeFieldName, c.tableUrl)
+	if c.fieldMap[modifiedTimeFieldName].Type() != "ModifiedTime" {
+		return fmt.Errorf("field \"%s\" with ModifiedTime type is required in larkbase table: %s", modifiedTimeFieldName, c.tableUrl)
 	}
 	for name, structField := range c.fieldMap {
 		f, ok := fields[name]
@@ -233,7 +232,6 @@ func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 	if len(fields) == 0 {
 		return nil, errors.New("fail to create record: empty fields")
 	}
-	fields[larkfield.ModifiedTimeFieldName] = larkfield.TimeToModifiedTime(time.Now())
 	req := larkbitable.NewCreateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).

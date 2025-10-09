@@ -75,3 +75,7 @@ func (f *AutoNumberField) Fork() Field {
 func (f *ButtonField) Fork() Field {
 	return &ButtonField{BaseField{id: f.id, name: f.name, type_: f.type_, value: f.value}}
 }
+
+func (f *ModifiedTimeField) Fork() Field {
+	return &ModifiedTimeField{BaseField{id: f.id, name: f.name, type_: f.type_, value: f.value}}
+}

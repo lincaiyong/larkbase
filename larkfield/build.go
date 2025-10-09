@@ -80,3 +80,7 @@ func (f *AutoNumberField) Build() any {
 func (f *ButtonField) Build() any {
 	return nil
 }
+
+func (f *ModifiedTimeField) Build() any {
+	return f.value.(time.Time).UnixMilli()
+}

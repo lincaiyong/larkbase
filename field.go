@@ -20,3 +20,4 @@ type PhoneField = larkfield.PhoneField
 type UrlField = larkfield.UrlField
 type MediaField = larkfield.MediaField
 type AutoNumberField = larkfield.AutoNumberField
+type ModifiedTimeField = larkfield.ModifiedTimeField
