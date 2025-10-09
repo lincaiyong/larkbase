@@ -355,7 +355,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	}
 	log.InfoLog("records count: %d", len(records))
 	if len(records) > 0 {
-		if batchSize == 0 {
+		if batchSize == 0 || batchSize > len(records) {
 			batchSize = len(records)
 		}
 		for i := 0; i < len(records)/batchSize; i++ {
