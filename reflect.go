@@ -203,7 +203,6 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]string, error
 		if fieldType.Name() == "Meta" {
 			meta := fieldValue.Convert(reflect.TypeOf(Meta{})).Interface().(Meta)
 			m["_record_id"] = meta.RecordId
-			m["_modified_time"] = larkfield.TimeToBeijingDateTimeStr(meta.ModifiedTime)
 			continue
 		}
 		baseFieldValue := fieldValue.Field(0)

@@ -18,5 +18,5 @@ func (f *CheckboxField) Value() bool {
 }
 
 func (f *CheckboxField) Is(value bool) *Condition {
-	return conditionIs(f.id, f.name, map[bool]string{true: "1", false: ""}[value])
+	return conditionIs(f.id, f.name, map[bool]string{true: "true", false: "false"}[value])
 }
