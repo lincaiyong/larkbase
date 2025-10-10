@@ -132,12 +132,8 @@ func (f *PhoneField) Parse(v any) error {
 
 func (f *UrlField) Parse(v any) error {
 	if v1, ok1 := v.(map[string]any); ok1 {
-		type_, ok2 := v1["type"].(string)
-		if !ok2 {
-			return parseError(f.type_, "string", v1["type"])
-		}
-		if type_ != "url" {
-			return fmt.Errorf("fail to handle url field type: %s", type_)
+		if v1["type"] != nil && v1["type"].(string) != "url" {
+			return fmt.Errorf("fail to handle url field type: %s", v1["type"])
 		}
 		link, ok3 := v1["link"].(string)
 		if !ok3 {

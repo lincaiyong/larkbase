@@ -40,6 +40,10 @@ func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T) (tableUrl,
 	err = c.fillStructPtr(structPtr)
 	for i := 1; i < structType.NumField(); i++ {
 		fieldValue := structValue.Field(i)
+		if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
+			err = fmt.Errorf("%s is not exported", structType.Field(i).Name)
+			return
+		}
 		field := fieldValue.Addr().Interface().(larkfield.Field)
 		fields = append(fields, field)
 	}
@@ -52,6 +56,9 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 	for i := 1; i < structValue.NumField(); i++ {
 		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
+		if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
+			return fmt.Errorf("%s is not exported", structType.Field(i).Name)
+		}
 		field := fieldValue.Addr().Interface().(larkfield.Field)
 		field.SetName(structField.Tag.Get("lark"))
 		field.SetType(convertToFieldType(structField.Type.String()))

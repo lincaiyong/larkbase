@@ -38,7 +38,10 @@ func (f *PhoneField) Build() any {
 }
 
 func (f *UrlField) Build() any {
-	return nil
+	return map[string]string{
+		"link": f.value.(string),
+		"text": f.value.(string),
+	}
 }
 
 func (f *MediaField) Build() any {
