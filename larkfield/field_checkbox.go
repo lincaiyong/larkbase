@@ -8,6 +8,10 @@ type CheckboxField struct {
 	BaseField
 }
 
+func (f *CheckboxField) SetValue(b bool) {
+	f.SetUnderlayValue(b)
+}
+
 func (f *CheckboxField) Value() bool {
 	if v, ok := f.value.(bool); ok {
 		return v
