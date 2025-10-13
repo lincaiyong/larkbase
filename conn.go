@@ -307,12 +307,12 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	sql := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (`record_id` VARCHAR(255) PRIMARY KEY, %s)",
 		tableName, strings.Join(items, ", "))
 	log.InfoLog("sql: %s", sql)
-	if err := db.Exec(sql).Error; err != nil {
+	if err := db.WithContext(c.ctx).Exec(sql).Error; err != nil {
 		return err
 	}
 	var count int64
 	sql = fmt.Sprintf("SELECT COUNT(1) FROM `%s`", tableName)
-	if err := db.Raw(sql).Scan(&count).Error; err != nil {
+	if err := db.WithContext(c.ctx).Raw(sql).Scan(&count).Error; err != nil {
 		return err
 	}
 	log.InfoLog("count: %d", count)
@@ -320,7 +320,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	if count > 0 {
 		sql = fmt.Sprintf("SELECT MAX(modified_time) FROM `%s`", tableName)
 		var latestModifiedTimeStr string
-		result := db.Raw(sql).Scan(&latestModifiedTimeStr)
+		result := db.WithContext(c.ctx).Raw(sql).Scan(&latestModifiedTimeStr)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -392,7 +392,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 				strings.Join(valuesPlaceHolders, ", "),
 				strings.Join(updateItems, ", "))
 			log.InfoLog("sql: %s", sql)
-			if err = db.Exec(sql, values...).Error; err != nil {
+			if err = db.WithContext(c.ctx).Exec(sql, values...).Error; err != nil {
 				return err
 			}
 			log.InfoLog("insert or update %d records", len(batchRecords))
