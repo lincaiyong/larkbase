@@ -1,6 +1,7 @@
 package larkbase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
@@ -22,7 +23,7 @@ type Condition = larkfield.Condition
 
 const modifiedTimeFieldName = "modified_time"
 
-func DescribeTable(appId, appSecret, url string) (string, error) {
+func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, error) {
 	appToken, tableId := extractAppTokenTableIdFromUrl(url)
 	if appToken == "" || tableId == "" {
 		return "", fmt.Errorf("invalid table url: %s", url)
@@ -30,7 +31,7 @@ func DescribeTable(appId, appSecret, url string) (string, error) {
 	client := lark.NewClient(appId, appSecret)
 	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		return queryFieldsByPage(client, appToken, tableId, pageToken, fields)
+		return queryFieldsByPage(ctx, client, appToken, tableId, pageToken, fields)
 	})
 	if err != nil {
 		return "", err
@@ -48,9 +49,9 @@ func DescribeTable(appId, appSecret, url string) (string, error) {
 	return sb.String(), nil
 }
 
-func Connect[T any](appId, appSecret string) (*Connection[T], error) {
+func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)
-	conn := &Connection[T]{condition: structPtr}
+	conn := &Connection[T]{ctx: ctx, condition: structPtr}
 	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
 	}
@@ -73,6 +74,7 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 }
 
 type Connection[T any] struct {
+	ctx    context.Context
 	client *lark.Client
 
 	condition *T
