@@ -40,7 +40,7 @@ func DescribeTable(appId, appSecret, url string) (string, error) {
 	sb.WriteString(fmt.Sprintf("    larkbase.Meta `lark:\"%s\"`\n\n", url))
 	for _, field := range fields {
 		switch field.Type() {
-		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Person", "Phone", "Url", "Media", "AutoNumber":
+		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Url", "AutoNumber", "ModifiedTime":
 			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", field.Name(), field.Type(), field.Name()))
 		}
 	}

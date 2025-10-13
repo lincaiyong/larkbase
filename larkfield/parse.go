@@ -2,7 +2,6 @@ package larkfield
 
 import (
 	"fmt"
-	"github.com/lincaiyong/log"
 	"strconv"
 	"strings"
 )
@@ -100,35 +99,36 @@ func (f *CheckboxField) Parse(v any) error {
 	}
 }
 
-func (f *PersonField) Parse(v any) error {
-	if v1, ok1 := v.([]any); ok1 {
-		items := make([]string, 0)
-		for _, v2 := range v1 {
-			if v3, ok3 := v2.(map[string]any); ok3 {
-				if v4, ok4 := v3["name"].(string); ok4 {
-					items = append(items, v4)
-				} else {
-					return parseError(f.type_, "string", v3["name"])
-				}
-			} else {
-				return parseError(f.type_, "map[string]any", v2)
-			}
-		}
-		f.value = items
-		return nil
-	} else {
-		return parseError(f.type_, "[]any", v)
-	}
-}
-
-func (f *PhoneField) Parse(v any) error {
-	if v1, ok1 := v.(string); ok1 {
-		f.value = v1
-		return nil
-	} else {
-		return parseError(f.type_, "string", v)
-	}
-}
+//
+//func (f *PersonField) Parse(v any) error {
+//	if v1, ok1 := v.([]any); ok1 {
+//		items := make([]string, 0)
+//		for _, v2 := range v1 {
+//			if v3, ok3 := v2.(map[string]any); ok3 {
+//				if v4, ok4 := v3["name"].(string); ok4 {
+//					items = append(items, v4)
+//				} else {
+//					return parseError(f.type_, "string", v3["name"])
+//				}
+//			} else {
+//				return parseError(f.type_, "map[string]any", v2)
+//			}
+//		}
+//		f.value = items
+//		return nil
+//	} else {
+//		return parseError(f.type_, "[]any", v)
+//	}
+//}
+//
+//func (f *PhoneField) Parse(v any) error {
+//	if v1, ok1 := v.(string); ok1 {
+//		f.value = v1
+//		return nil
+//	} else {
+//		return parseError(f.type_, "string", v)
+//	}
+//}
 
 func (f *UrlField) Parse(v any) error {
 	if v1, ok1 := v.(map[string]any); ok1 {
@@ -146,60 +146,25 @@ func (f *UrlField) Parse(v any) error {
 	}
 }
 
-func (f *MediaField) Parse(v any) error {
-	if v1, ok1 := v.([]any); ok1 {
-		items := make([]string, 0)
-		for _, v2 := range v1 {
-			if v3, ok3 := v2.(map[string]any); ok3 {
-				fileToken, ok4 := v3["file_token"].(string)
-				if !ok4 {
-					return parseError(f.type_, "string", v3["file_token"])
-				}
-				items = append(items, fileToken)
-			} else {
-				return parseError(f.type_, "map[string]any", v2)
-			}
-		}
-		return nil
-	} else {
-		return parseError(f.type_, "[]any", v)
-	}
-}
-
-func (f *SingleLinkField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *LookupField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *FormulaField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *DuplexLinkField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *LocationField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *GroupField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
-
-func (f *WorkflowField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
-}
+//func (f *MediaField) Parse(v any) error {
+//	if v1, ok1 := v.([]any); ok1 {
+//		items := make([]string, 0)
+//		for _, v2 := range v1 {
+//			if v3, ok3 := v2.(map[string]any); ok3 {
+//				fileToken, ok4 := v3["file_token"].(string)
+//				if !ok4 {
+//					return parseError(f.type_, "string", v3["file_token"])
+//				}
+//				items = append(items, fileToken)
+//			} else {
+//				return parseError(f.type_, "map[string]any", v2)
+//			}
+//		}
+//		return nil
+//	} else {
+//		return parseError(f.type_, "[]any", v)
+//	}
+//}
 
 func (f *AutoNumberField) Parse(v any) error {
 	if val, err := strconv.ParseInt(v.(string), 0, 64); err == nil {
@@ -208,11 +173,6 @@ func (f *AutoNumberField) Parse(v any) error {
 	} else {
 		return parseError(f.type_, "integer string", v)
 	}
-}
-
-func (f *ButtonField) Parse(_ any) error {
-	log.WarnLog("%s field parse skipped", f.type_)
-	return nil
 }
 
 func (f *ModifiedTimeField) Parse(v any) error {
