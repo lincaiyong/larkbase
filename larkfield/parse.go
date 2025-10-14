@@ -20,7 +20,7 @@ func (f *TextField) Parse(v any) error {
 					return parseError(f.type_, "string", v3["type"])
 				}
 				switch type_ {
-				case "text", "url":
+				case "text", "url", "mention":
 					value, okV := v3["text"].(string)
 					if !okV {
 						return parseError(f.type_, "string", v3["value"])

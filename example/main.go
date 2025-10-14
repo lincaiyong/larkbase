@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/lincaiyong/larkbase"
 	"os"
@@ -79,7 +80,7 @@ func main() {
 	//fmt.Println(larkfield.TimeToModifiedTime(time.Now()))
 	//fmt.Println(larkfield.ModifiedTimeToTime(2509091209).Format(time.DateTime))
 
-	conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
+	conn, err := larkbase.Connect[DemoRecord](context.Background(), larkAppId, larkAppSecret)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -95,22 +96,22 @@ func main() {
 	//	fmt.Println(err)
 	//	os.Exit(1)
 	//}
-	//
+
 	var records []*DemoRecord
-	err = conn.FindAll(&records, conn.FilterAnd(conn.Condition().Multi.Is("\"123'")), conn.Sort().Date.Desc())
+	err = conn.FindAll(&records, nil, conn.Sort().Date.Desc())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	fmt.Println(conn.MarshalIgnoreError(records))
 
-	//s, err := larkbase.DescribeTable(larkAppId, larkAppSecret, "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y")
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//fmt.Println(s)
-	//return
+	s, err := larkbase.DescribeTable(context.Background(), larkAppId, larkAppSecret, "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+	return
 
 	//conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
 	//if err != nil {

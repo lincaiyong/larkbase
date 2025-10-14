@@ -1,6 +1,7 @@
 package larkbase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
@@ -22,7 +23,7 @@ type Condition = larkfield.Condition
 
 const modifiedTimeFieldName = "modified_time"
 
-func DescribeTable(appId, appSecret, url string) (string, error) {
+func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, error) {
 	appToken, tableId := extractAppTokenTableIdFromUrl(url)
 	if appToken == "" || tableId == "" {
 		return "", fmt.Errorf("invalid table url: %s", url)
@@ -30,7 +31,7 @@ func DescribeTable(appId, appSecret, url string) (string, error) {
 	client := lark.NewClient(appId, appSecret)
 	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		return queryFieldsByPage(client, appToken, tableId, pageToken, fields)
+		return queryFieldsByPage(ctx, client, appToken, tableId, pageToken, fields)
 	})
 	if err != nil {
 		return "", err
@@ -48,9 +49,9 @@ func DescribeTable(appId, appSecret, url string) (string, error) {
 	return sb.String(), nil
 }
 
-func Connect[T any](appId, appSecret string) (*Connection[T], error) {
+func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
 	structPtr := new(T)
-	conn := &Connection[T]{condition: structPtr}
+	conn := &Connection[T]{ctx: ctx, condition: structPtr}
 	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
 	}
@@ -73,6 +74,7 @@ func Connect[T any](appId, appSecret string) (*Connection[T], error) {
 }
 
 type Connection[T any] struct {
+	ctx    context.Context
 	client *lark.Client
 
 	condition *T
@@ -305,12 +307,12 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	sql := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (`record_id` VARCHAR(255) PRIMARY KEY, %s)",
 		tableName, strings.Join(items, ", "))
 	log.InfoLog("sql: %s", sql)
-	if err := db.Exec(sql).Error; err != nil {
+	if err := db.WithContext(c.ctx).Exec(sql).Error; err != nil {
 		return err
 	}
 	var count int64
 	sql = fmt.Sprintf("SELECT COUNT(1) FROM `%s`", tableName)
-	if err := db.Raw(sql).Scan(&count).Error; err != nil {
+	if err := db.WithContext(c.ctx).Raw(sql).Scan(&count).Error; err != nil {
 		return err
 	}
 	log.InfoLog("count: %d", count)
@@ -318,7 +320,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 	if count > 0 {
 		sql = fmt.Sprintf("SELECT MAX(modified_time) FROM `%s`", tableName)
 		var latestModifiedTimeStr string
-		result := db.Raw(sql).Scan(&latestModifiedTimeStr)
+		result := db.WithContext(c.ctx).Raw(sql).Scan(&latestModifiedTimeStr)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -390,7 +392,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 				strings.Join(valuesPlaceHolders, ", "),
 				strings.Join(updateItems, ", "))
 			log.InfoLog("sql: %s", sql)
-			if err = db.Exec(sql, values...).Error; err != nil {
+			if err = db.WithContext(c.ctx).Exec(sql, values...).Error; err != nil {
 				return err
 			}
 			log.InfoLog("insert or update %d records", len(batchRecords))
