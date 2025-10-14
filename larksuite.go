@@ -85,7 +85,7 @@ func (c *Connection[T]) parseAppTableRecords(items []*larkbitable.AppTableRecord
 }
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
-func (c *Connection[T]) queryRecordsByPage(filter *larkbitable.FilterInfo, sorts []*larkbitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
+func (c *Connection[T]) queryRecordsByPage(viewId string, filter *larkbitable.FilterInfo, sorts []*larkbitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
 	if pageSize == 0 {
 		pageSize = 100
 	}
@@ -96,6 +96,9 @@ func (c *Connection[T]) queryRecordsByPage(filter *larkbitable.FilterInfo, sorts
 	}
 	if sorts != nil {
 		bodyBuilder.Sort(sorts)
+	}
+	if filter == nil && len(sorts) == 0 && viewId != "" {
+		bodyBuilder.ViewId(viewId)
 	}
 	bodyBuilder.AutomaticFields(true)
 	reqBuilder := larkbitable.NewSearchAppTableRecordReqBuilder().
