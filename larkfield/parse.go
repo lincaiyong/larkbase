@@ -2,6 +2,7 @@ package larkfield
 
 import (
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"strconv"
 	"strings"
 )
@@ -11,39 +12,24 @@ func parseError(type_, expect string, v any) error {
 }
 
 func (f *TextField) Parse(v any) error {
-	if v1, ok1 := v.([]any); ok1 {
-		items := make([]string, 0)
-		for _, v2 := range v1 {
-			if v3, ok3 := v2.(map[string]any); ok3 {
-				type_, okT := v3["type"].(string)
-				if !okT {
-					return parseError(f.type_, "string", v3["type"])
-				}
-				switch type_ {
-				case "text", "url", "mention":
-					value, okV := v3["text"].(string)
-					if !okV {
-						return parseError(f.type_, "string", v3["value"])
-					}
-					items = append(items, value)
-				default:
-					return fmt.Errorf("fail to handle text field type: %s", type_)
-				}
-
-			}
-		}
-		if len(items) == 1 {
-			f.value = items[0]
-		} else if len(items) > 1 {
-			f.value = strings.Join(items, "")
-		}
-		return nil
-	}
 	if v1, ok1 := v.(string); ok1 {
 		f.value = v1
 		return nil
 	}
-	return fmt.Errorf("fail to handle value of type %T", v)
+	var data []struct {
+		Type string `mapstructure:"type"`
+		Text string `mapstructure:"text"`
+	}
+	err := mapstructure.WeakDecode(v, &data)
+	if err != nil {
+		return fmt.Errorf("fail to parse text field: %w, %v", err, v)
+	}
+	items := make([]string, 0)
+	for _, item := range data {
+		items = append(items, item.Text)
+	}
+	f.value = strings.Join(items, "")
+	return nil
 }
 
 func (f *NumberField) Parse(v any) error {
@@ -65,20 +51,13 @@ func (f *SingleSelectField) Parse(v any) error {
 }
 
 func (f *MultiSelectField) Parse(v any) error {
-	if v1, ok1 := v.([]any); ok1 {
-		items := make([]string, 0)
-		for _, v2 := range v1 {
-			if v3, ok3 := v2.(string); ok3 {
-				items = append(items, v3)
-			} else {
-				return parseError(f.type_, "string", v2)
-			}
-		}
-		f.value = items
-		return nil
-	} else {
-		return parseError(f.type_, "[]any", v)
+	var data []string
+	err := mapstructure.Decode(v, &data)
+	if err != nil {
+		return fmt.Errorf("fail to parse multi select field: %w, %v", err, v)
 	}
+	f.value = data
+	return nil
 }
 
 func (f *DateField) Parse(v any) error {
@@ -131,19 +110,16 @@ func (f *CheckboxField) Parse(v any) error {
 //}
 
 func (f *UrlField) Parse(v any) error {
-	if v1, ok1 := v.(map[string]any); ok1 {
-		if v1["type"] != nil && v1["type"].(string) != "url" {
-			return fmt.Errorf("fail to handle url field type: %s", v1["type"])
-		}
-		link, ok3 := v1["link"].(string)
-		if !ok3 {
-			return parseError(f.type_, "string", v1["link"])
-		}
-		f.value = link
-		return nil
-	} else {
-		return parseError(f.type_, "map[string]any", v)
+	var data struct {
+		Type string `mapstructure:"type"`
+		Link string `mapstructure:"link"`
 	}
+	err := mapstructure.Decode(v, &data)
+	if err != nil {
+		return fmt.Errorf("fail to parse url field: %w, %v", err, v)
+	}
+	f.value = data.Link
+	return nil
 }
 
 //func (f *MediaField) Parse(v any) error {
@@ -182,4 +158,58 @@ func (f *ModifiedTimeField) Parse(v any) error {
 	} else {
 		return parseError(f.type_, "float64", v)
 	}
+}
+
+func parseAnyTypeField(v any) (string, error) {
+	var data struct {
+		Type  Type `mapstructure:"type"`
+		Value any  `mapstructure:"value"`
+	}
+	err := mapstructure.Decode(v, &data)
+	if err != nil {
+		return "", err
+	}
+	switch data.Type {
+	case TypeText:
+		f := &TextField{}
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	case TypeNumber:
+		f := &NumberField{}
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	case TypeSingleSelect:
+		f := &SingleSelectField{}
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	default:
+		return "", fmt.Errorf("unsupported type field for lookup or formula: %s", data.Type.String())
+	}
+}
+
+func (f *LookupField) Parse(v any) error {
+	val, err := parseAnyTypeField(v)
+	if err != nil {
+		return fmt.Errorf("fail to parse lookup field: %w, %v", err, v)
+	}
+	f.value = val
+	return nil
+}
+
+func (f *FormulaField) Parse(v any) error {
+	val, err := parseAnyTypeField(v)
+	if err != nil {
+		return fmt.Errorf("fail to parse formula field: %w, %v", err, v)
+	}
+	f.value = val
+	return nil
 }

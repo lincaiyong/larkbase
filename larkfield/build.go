@@ -43,3 +43,11 @@ func (f *AutoNumberField) Build() any {
 func (f *ModifiedTimeField) Build() any {
 	return f.value.(time.Time).UnixMilli()
 }
+
+func (f *LookupField) Build() any {
+	return nil
+}
+
+func (f *FormulaField) Build() any {
+	return nil
+}

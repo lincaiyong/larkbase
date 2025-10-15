@@ -142,7 +142,14 @@ func (c *Connection[T]) IsNotFoundError(err error) bool {
 	return errors.Is(err, errorNotFound)
 }
 
-func (c *Connection[T]) Find(structPtr *T, filter *larkbitable.FilterInfo, sorts ...*larkbitable.Sort) error {
+type FindOption struct {
+	Filter *larkbitable.FilterInfo
+	Sorts  []*larkbitable.Sort
+	Limit  int
+	ViewId string
+}
+
+func (c *Connection[T]) Find(structPtr *T, opt FindOption) error {
 	if structPtr == nil {
 		return errors.New("structPtr is nil")
 	}
@@ -151,7 +158,7 @@ func (c *Connection[T]) Find(structPtr *T, filter *larkbitable.FilterInfo, sorts
 	}
 	var err error
 	records := make([]*Record, 0)
-	records, _, err = c.queryRecordsByPage(filter, sorts, "", 1, records)
+	records, _, err = c.queryRecordsByPage(opt.ViewId, opt.Filter, opt.Sorts, "", 1, records)
 	if err != nil {
 		return err
 	}
@@ -166,7 +173,7 @@ func (c *Connection[T]) Find(structPtr *T, filter *larkbitable.FilterInfo, sorts
 	return nil
 }
 
-func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filter *larkbitable.FilterInfo, sorts ...*larkbitable.Sort) error {
+func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, opt FindOption) error {
 	if structPtrSlicePtr == nil {
 		return errors.New("structSlicePtr is nil")
 	}
@@ -174,8 +181,15 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, filter *larkbitable.Fil
 		return err
 	}
 	records := make([]*Record, 0)
+	pageSize := 0
+	if opt.Limit > 0 {
+		pageSize = opt.Limit
+	}
 	if err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		records, newPageToken, err = c.queryRecordsByPage(filter, sorts, pageToken, 0, records)
+		records, newPageToken, err = c.queryRecordsByPage(opt.ViewId, opt.Filter, opt.Sorts, pageToken, pageSize, records)
+		if opt.Limit > 0 && len(records) >= opt.Limit {
+			newPageToken = ""
+		}
 		return
 	}); err != nil {
 		return err
@@ -337,7 +351,9 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 		filter = c.FilterAnd(field.IsGreater(*latestModifiedTime))
 	}
 	var rawRecords []*T
-	err := c.FindAll(&rawRecords, filter)
+	err := c.FindAll(&rawRecords, FindOption{
+		Filter: filter,
+	})
 	if err != nil {
 		return err
 	}

@@ -24,6 +24,8 @@ type DemoRecord struct {
 	Code         larkbase.BarcodeField      `lark:"条码"`
 	Currency     larkbase.CurrencyField     `lark:"货币"`
 	Rating       larkbase.RatingField       `lark:"评分"`
+	Lookup       larkbase.LookupField       `lark:"lookup"`
+	Formula      larkbase.FormulaField      `lark:"formula"`
 	ModifiedTime larkbase.ModifiedTimeField `lark:"modified_time"`
 }
 
@@ -53,7 +55,7 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	for i := range records {
 		conditions = append(conditions, conn.Condition().Name.Is(fmt.Sprintf("test-%d", i)))
 	}
-	err = conn.FindAll(&results, conn.FilterOr(conditions...))
+	err = conn.FindAll(&results, larkbase.FindOption{Filter: conn.FilterOr(conditions...)})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -98,7 +100,9 @@ func main() {
 	//}
 
 	var records []*DemoRecord
-	err = conn.FindAll(&records, nil, conn.Sort().Date.Desc())
+	err = conn.FindAll(&records, larkbase.FindOption{
+		Filter: nil,
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
