@@ -183,3 +183,11 @@ func (f *ModifiedTimeField) Parse(v any) error {
 		return parseError(f.type_, "float64", v)
 	}
 }
+
+func (f *LookupField) Parse(v any) error {
+	return nil
+}
+
+func (f *FormulaField) Parse(v any) error {
+	return nil
+}

@@ -35,3 +35,11 @@ func (f *AutoNumberField) Fork() Field {
 func (f *ModifiedTimeField) Fork() Field {
 	return &ModifiedTimeField{BaseField{id: f.id, name: f.name, type_: f.type_, value: f.value}}
 }
+
+func (f *LookupField) Fork() Field {
+	return &LookupField{BaseField{id: f.id, name: f.name, type_: f.type_, value: f.value}}
+}
+
+func (f *FormulaField) Fork() Field {
+	return &FormulaField{BaseField{id: f.id, name: f.name, type_: f.type_, value: f.value}}
+}
