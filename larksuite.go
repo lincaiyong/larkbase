@@ -108,7 +108,12 @@ func (c *Connection[T]) queryRecordsByPage(viewId string, filter *bitable.Filter
 		PageSize(pageSize).
 		Body(bodyBuilder.Build())
 	req := reqBuilder.Build()
-	var resp, err = c.client.Bitable.V1.AppTableRecord.Search(c.ctx, req)
+	var resp *larkbitable.SearchAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.Search(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return nil, "", fmt.Errorf("fail to call bitable search table: %v", err)
 	}
@@ -149,7 +154,12 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 			Fields(fields).
 			Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.Update(c.ctx, req)
+
+	var resp *larkbitable.UpdateAppTableRecordResp
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.Update(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable update table: %v", err)
 	}
@@ -184,7 +194,12 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 		Body(bitable.NewBatchUpdateAppTableRecordReqBodyBuilder().
 			Records(reqRecords).
 			Build()).Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.BatchUpdate(c.ctx, req)
+	var resp *larkbitable.BatchUpdateAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.BatchUpdate(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable update table: %v", err)
 	}
@@ -242,7 +257,11 @@ func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 			Fields(fields).
 			Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.Create(c.ctx, req)
+	var resp *larkbitable.CreateAppTableRecordResp
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.Create(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to call bitable create record: %v", err)
 	}
@@ -280,7 +299,12 @@ func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 		TableId(c.tableId).
 		Body(bitable.NewBatchCreateAppTableRecordReqBodyBuilder().Records(reqRecords).Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
+	var resp *larkbitable.BatchCreateAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to call bitable create record: %v", err)
 	}
@@ -304,7 +328,12 @@ func (c *Connection[T]) deleteRecord(record *Record) error {
 		AppToken(c.appToken).TableId(c.tableId).
 		RecordId(record.Id)
 	req := builder.Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.Delete(c.ctx, req)
+	var resp *larkbitable.DeleteAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.Delete(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable delete record: %v", err)
 	}
@@ -331,7 +360,12 @@ func (c *Connection[T]) deleteRecords(records []*Record) error {
 		Body(bitable.NewBatchDeleteAppTableRecordReqBodyBuilder().
 			Records(recordIds).
 			Build()).Build()
-	resp, err := c.client.Bitable.V1.AppTableRecord.BatchDelete(c.ctx, req)
+	var resp *larkbitable.BatchDeleteAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.BatchDelete(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable delete record: %v", err)
 	}
@@ -351,7 +385,12 @@ func (c *Connection[T]) createView(name string) (string, error) {
 			ViewType(`grid`).
 			Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableView.Create(c.ctx, req)
+	var resp *larkbitable.CreateAppTableViewResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableView.Create(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return "", fmt.Errorf("fail to call bitable create view: %v", err)
 	}
@@ -375,7 +414,12 @@ func (c *Connection[T]) updateView(viewId, viewName string, filter *ViewFilter) 
 				Build()).
 			Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableView.Patch(c.ctx, req)
+	var resp *larkbitable.PatchAppTableViewResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableView.Patch(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable update view: %v", err)
 	}
@@ -392,7 +436,12 @@ func (c *Connection[T]) listFields() (map[string]larkfield.Type, error) {
 		TableId(c.tableId).
 		PageSize(100).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableField.List(c.ctx, req)
+	var resp *larkbitable.ListAppTableFieldResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableField.List(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to call bitable list field: %v", err)
 	}
@@ -419,7 +468,12 @@ func (c *Connection[T]) createField(name string, type_ larkfield.Type) error {
 			Type(int(type_)).
 			Build()).
 		Build()
-	resp, err := c.client.Bitable.V1.AppTableField.Create(c.ctx, req)
+	var resp *larkbitable.CreateAppTableFieldResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableField.Create(c.ctx, req)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("fail to call bitable create field: %v", err)
 	}
@@ -427,4 +481,12 @@ func (c *Connection[T]) createField(name string, type_ larkfield.Type) error {
 		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	return nil
+}
+
+func (c *Connection[T]) retry(f func() error) {
+	for i := 0; i < 3; i++ {
+		if err := f(); err == nil {
+			break
+		}
+	}
 }
