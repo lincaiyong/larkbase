@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	"github.com/lincaiyong/larkbase/larksuite/core"
-	"github.com/lincaiyong/larkbase/larksuite/service/bitable"
 )
 
 type Client struct {

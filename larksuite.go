@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
+	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
-	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 	"github.com/lincaiyong/log"
 )
 
@@ -53,7 +53,7 @@ func (c *Connection[T]) checkFields() error {
 	return nil
 }
 
-func (c *Connection[T]) parseAppTableRecord(item *larkbitable.AppTableRecord) (*Record, error) {
+func (c *Connection[T]) parseAppTableRecord(item *bitable.AppTableRecord) (*Record, error) {
 	record := &Record{
 		Id:     *item.RecordId,
 		Fields: make(map[string]larkfield.Field),
@@ -72,7 +72,7 @@ func (c *Connection[T]) parseAppTableRecord(item *larkbitable.AppTableRecord) (*
 	return record, nil
 }
 
-func (c *Connection[T]) parseAppTableRecords(items []*larkbitable.AppTableRecord) ([]*Record, error) {
+func (c *Connection[T]) parseAppTableRecords(items []*bitable.AppTableRecord) ([]*Record, error) {
 	records := make([]*Record, 0, len(items))
 	for _, item := range items {
 		record, err := c.parseAppTableRecord(item)
@@ -85,11 +85,11 @@ func (c *Connection[T]) parseAppTableRecords(items []*larkbitable.AppTableRecord
 }
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
-func (c *Connection[T]) queryRecordsByPage(viewId string, filter *larkbitable.FilterInfo, sorts []*larkbitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
+func (c *Connection[T]) queryRecordsByPage(viewId string, filter *bitable.FilterInfo, sorts []*bitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
 	if pageSize == 0 {
 		pageSize = 100
 	}
-	bodyBuilder := larkbitable.NewSearchAppTableRecordReqBodyBuilder()
+	bodyBuilder := bitable.NewSearchAppTableRecordReqBodyBuilder()
 	bodyBuilder.FieldNames(c.fieldNames)
 	if filter != nil {
 		bodyBuilder.Filter(filter)
@@ -101,7 +101,7 @@ func (c *Connection[T]) queryRecordsByPage(viewId string, filter *larkbitable.Fi
 		bodyBuilder.ViewId(viewId)
 	}
 	bodyBuilder.AutomaticFields(true)
-	reqBuilder := larkbitable.NewSearchAppTableRecordReqBuilder().
+	reqBuilder := bitable.NewSearchAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
 		PageToken(pageToken).
@@ -141,11 +141,11 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 	if len(fields) == 0 {
 		return nil
 	}
-	req := larkbitable.NewUpdateAppTableRecordReqBuilder().
+	req := bitable.NewUpdateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
 		RecordId(record.Id).
-		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
+		AppTableRecord(bitable.NewAppTableRecordBuilder().
 			Fields(fields).
 			Build()).
 		Build()
@@ -161,7 +161,7 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_update
 func (c *Connection[T]) updateRecords(records []*Record) error {
-	reqRecords := make([]*larkbitable.AppTableRecord, 0, len(records))
+	reqRecords := make([]*bitable.AppTableRecord, 0, len(records))
 	for _, record := range records {
 		fields, err := record.buildForLarkSuite()
 		if err != nil {
@@ -170,7 +170,7 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 		if len(fields) == 0 {
 			continue
 		}
-		reqRecords = append(reqRecords, larkbitable.NewAppTableRecordBuilder().
+		reqRecords = append(reqRecords, bitable.NewAppTableRecordBuilder().
 			Fields(fields).
 			RecordId(record.Id).
 			Build())
@@ -178,10 +178,10 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 	if len(reqRecords) == 0 {
 		return nil
 	}
-	req := larkbitable.NewBatchUpdateAppTableRecordReqBuilder().
+	req := bitable.NewBatchUpdateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
-		Body(larkbitable.NewBatchUpdateAppTableRecordReqBodyBuilder().
+		Body(bitable.NewBatchUpdateAppTableRecordReqBodyBuilder().
 			Records(reqRecords).
 			Build()).Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.BatchUpdate(c.ctx, req)
@@ -196,7 +196,7 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 
 func queryFieldsByPage(ctx context.Context, client *lark.Client, appToken, tableId, pageToken string, fields map[string]larkfield.Field) (string, error) {
 	pageSize := 100
-	req := larkbitable.NewListAppTableFieldReqBuilder().
+	req := bitable.NewListAppTableFieldReqBuilder().
 		AppToken(appToken).
 		TableId(tableId).
 		PageToken(pageToken).
@@ -235,10 +235,10 @@ func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 	if len(fields) == 0 {
 		return nil, errors.New("fail to create record: empty fields")
 	}
-	req := larkbitable.NewCreateAppTableRecordReqBuilder().
+	req := bitable.NewCreateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
-		AppTableRecord(larkbitable.NewAppTableRecordBuilder().
+		AppTableRecord(bitable.NewAppTableRecordBuilder().
 			Fields(fields).
 			Build()).
 		Build()
@@ -259,7 +259,7 @@ func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_create
 func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
-	reqRecords := make([]*larkbitable.AppTableRecord, 0, len(records))
+	reqRecords := make([]*bitable.AppTableRecord, 0, len(records))
 	for _, record := range records {
 		fields, err := record.buildForLarkSuite()
 		if err != nil {
@@ -268,17 +268,17 @@ func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 		if len(fields) == 0 {
 			continue
 		}
-		reqRecords = append(reqRecords, larkbitable.NewAppTableRecordBuilder().
+		reqRecords = append(reqRecords, bitable.NewAppTableRecordBuilder().
 			Fields(fields).
 			Build())
 	}
 	if len(reqRecords) == 0 {
 		return nil, fmt.Errorf("fail to create records: empty records")
 	}
-	req := larkbitable.NewBatchCreateAppTableRecordReqBuilder().
+	req := bitable.NewBatchCreateAppTableRecordReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
-		Body(larkbitable.NewBatchCreateAppTableRecordReqBodyBuilder().Records(reqRecords).Build()).
+		Body(bitable.NewBatchCreateAppTableRecordReqBodyBuilder().Records(reqRecords).Build()).
 		Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
 	if err != nil {
@@ -300,7 +300,7 @@ func (c *Connection[T]) deleteRecord(record *Record) error {
 	if record.Id == "" {
 		return fmt.Errorf("record id is empty")
 	}
-	builder := larkbitable.NewDeleteAppTableRecordReqBuilder().
+	builder := bitable.NewDeleteAppTableRecordReqBuilder().
 		AppToken(c.appToken).TableId(c.tableId).
 		RecordId(record.Id)
 	req := builder.Build()
@@ -326,9 +326,9 @@ func (c *Connection[T]) deleteRecords(records []*Record) error {
 	if len(recordIds) == 0 {
 		return fmt.Errorf("fail to delete records: empty records")
 	}
-	req := larkbitable.NewBatchDeleteAppTableRecordReqBuilder().
+	req := bitable.NewBatchDeleteAppTableRecordReqBuilder().
 		AppToken(c.appToken).TableId(c.tableId).
-		Body(larkbitable.NewBatchDeleteAppTableRecordReqBodyBuilder().
+		Body(bitable.NewBatchDeleteAppTableRecordReqBodyBuilder().
 			Records(recordIds).
 			Build()).Build()
 	resp, err := c.client.Bitable.V1.AppTableRecord.BatchDelete(c.ctx, req)
@@ -343,10 +343,10 @@ func (c *Connection[T]) deleteRecords(records []*Record) error {
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-view/create
 func (c *Connection[T]) createView(name string) (string, error) {
-	req := larkbitable.NewCreateAppTableViewReqBuilder().
+	req := bitable.NewCreateAppTableViewReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
-		ReqView(larkbitable.NewReqViewBuilder().
+		ReqView(bitable.NewReqViewBuilder().
 			ViewName(name).
 			ViewType(`grid`).
 			Build()).
@@ -364,13 +364,13 @@ func (c *Connection[T]) createView(name string) (string, error) {
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-view/patch
 func (c *Connection[T]) updateView(viewId, viewName string, filter *ViewFilter) error {
-	req := larkbitable.NewPatchAppTableViewReqBuilder().
+	req := bitable.NewPatchAppTableViewReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
 		ViewId(viewId).
-		Body(larkbitable.NewPatchAppTableViewReqBodyBuilder().
+		Body(bitable.NewPatchAppTableViewReqBodyBuilder().
 			ViewName(viewName).
-			Property(larkbitable.NewAppTableViewPropertyBuilder().
+			Property(bitable.NewAppTableViewPropertyBuilder().
 				FilterInfo(filter).
 				Build()).
 			Build()).
@@ -387,7 +387,7 @@ func (c *Connection[T]) updateView(viewId, viewName string, filter *ViewFilter) 
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-field/list?appId=cli_a8d592a8e236d00b
 func (c *Connection[T]) listFields() (map[string]larkfield.Type, error) {
-	req := larkbitable.NewListAppTableFieldReqBuilder().
+	req := bitable.NewListAppTableFieldReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
 		PageSize(100).
@@ -411,10 +411,10 @@ func (c *Connection[T]) listFields() (map[string]larkfield.Type, error) {
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-field/create
 func (c *Connection[T]) createField(name string, type_ larkfield.Type) error {
-	req := larkbitable.NewCreateAppTableFieldReqBuilder().
+	req := bitable.NewCreateAppTableFieldReqBuilder().
 		AppToken(c.appToken).
 		TableId(c.tableId).
-		AppTableField(larkbitable.NewAppTableFieldBuilder().
+		AppTableField(bitable.NewAppTableFieldBuilder().
 			FieldName(name).
 			Type(int(type_)).
 			Build()).

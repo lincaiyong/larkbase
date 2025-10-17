@@ -2,7 +2,7 @@ package larkfield
 
 import (
 	"encoding/json"
-	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
+	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	"time"
 )
 
@@ -102,13 +102,13 @@ func (f *BaseField) Build() any {
 	panic("should not happen")
 }
 
-func (f *BaseField) Asc() *larkbitable.Sort {
-	builder := &larkbitable.SortBuilder{}
+func (f *BaseField) Asc() *bitable.Sort {
+	builder := &bitable.SortBuilder{}
 	return builder.FieldName(f.name).Build()
 }
 
-func (f *BaseField) Desc() *larkbitable.Sort {
-	builder := &larkbitable.SortBuilder{}
+func (f *BaseField) Desc() *bitable.Sort {
+	builder := &bitable.SortBuilder{}
 	return builder.FieldName(f.name).Desc(true).Build()
 }
 

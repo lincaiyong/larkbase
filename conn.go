@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
-	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
+	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	"github.com/lincaiyong/log"
 	"gorm.io/gorm"
 	"strings"
@@ -17,8 +17,8 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
-type Filter = larkbitable.FilterInfo
-type ViewFilter = larkbitable.AppTableViewPropertyFilterInfo
+type Filter = bitable.FilterInfo
+type ViewFilter = bitable.AppTableViewPropertyFilterInfo
 type Condition = larkfield.Condition
 
 const modifiedTimeFieldName = "modified_time"
@@ -97,41 +97,41 @@ func (c *Connection[T]) Condition() *T {
 }
 
 func (c *Connection[T]) FilterAnd(conditions ...*Condition) *Filter {
-	s := make([]*larkbitable.Condition, len(conditions))
+	s := make([]*bitable.Condition, len(conditions))
 	for i, condition := range conditions {
 		s[i] = condition.ToLarkCondition()
 	}
-	return larkbitable.NewFilterInfoBuilder().
+	return bitable.NewFilterInfoBuilder().
 		Conjunction(`and`).
 		Conditions(s).Build()
 }
 
 func (c *Connection[T]) FilterOr(conditions ...*Condition) *Filter {
-	s := make([]*larkbitable.Condition, len(conditions))
+	s := make([]*bitable.Condition, len(conditions))
 	for i, condition := range conditions {
 		s[i] = condition.ToLarkCondition()
 	}
-	return larkbitable.NewFilterInfoBuilder().
+	return bitable.NewFilterInfoBuilder().
 		Conjunction(`or`).
 		Conditions(s).Build()
 }
 
 func (c *Connection[T]) ViewFilterAnd(conditions ...*Condition) *ViewFilter {
-	s := make([]*larkbitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
+	s := make([]*bitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
 	for i, condition := range conditions {
 		s[i] = condition.ToLarkViewCondition()
 	}
-	return larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
+	return bitable.NewAppTableViewPropertyFilterInfoBuilder().
 		Conjunction(`and`).
 		Conditions(s).Build()
 }
 
 func (c *Connection[T]) ViewFilterOr(conditions ...*Condition) *ViewFilter {
-	s := make([]*larkbitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
+	s := make([]*bitable.AppTableViewPropertyFilterInfoCondition, len(conditions))
 	for i, condition := range conditions {
 		s[i] = condition.ToLarkViewCondition()
 	}
-	return larkbitable.NewAppTableViewPropertyFilterInfoBuilder().
+	return bitable.NewAppTableViewPropertyFilterInfoBuilder().
 		Conjunction(`or`).
 		Conditions(s).Build()
 }
@@ -143,8 +143,8 @@ func (c *Connection[T]) IsNotFoundError(err error) bool {
 }
 
 type FindOption struct {
-	Filter *larkbitable.FilterInfo
-	Sorts  []*larkbitable.Sort
+	Filter *bitable.FilterInfo
+	Sorts  []*bitable.Sort
 	Limit  int
 	ViewId string
 }
@@ -345,7 +345,7 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 		latestModifiedTime = &t
 		log.InfoLog("latestModifiedTime: %s", latestModifiedTimeStr)
 	}
-	var filter *larkbitable.FilterInfo
+	var filter *bitable.FilterInfo
 	if latestModifiedTime != nil {
 		field := c.fieldMap[modifiedTimeFieldName].(*larkfield.ModifiedTimeField)
 		filter = c.FilterAnd(field.IsGreater(*latestModifiedTime))

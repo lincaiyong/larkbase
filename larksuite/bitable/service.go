@@ -4,15 +4,14 @@ package bitable
 
 import (
 	"github.com/lincaiyong/larkbase/larksuite/core"
-	v1 "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
 )
 
 type Service struct {
-	*v1.V1
+	*V1
 }
 
 func NewService(config *larkcore.Config) *Service {
 	return &Service{
-		V1: v1.New(config),
+		V1: New(config),
 	}
 }

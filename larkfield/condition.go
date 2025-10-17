@@ -3,7 +3,7 @@ package larkfield
 import (
 	"encoding/json"
 	"fmt"
-	larkbitable "github.com/lincaiyong/larkbase/larksuite/service/bitable/v1"
+	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	"time"
 )
 
@@ -39,19 +39,19 @@ func (c *Condition) Value() []string {
 	return c.value
 }
 
-func (c *Condition) ToLarkCondition() *larkbitable.Condition {
+func (c *Condition) ToLarkCondition() *bitable.Condition {
 	if c.operator == ConditionOpIsEmpty || c.operator == ConditionOpIsNotEmpty {
-		return larkbitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(make([]string, 0)).Build()
+		return bitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(make([]string, 0)).Build()
 	}
-	return larkbitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(c.value).Build()
+	return bitable.NewConditionBuilder().FieldName(c.fieldName).Operator(c.operator).Value(c.value).Build()
 }
 
-func (c *Condition) ToLarkViewCondition() *larkbitable.AppTableViewPropertyFilterInfoCondition {
+func (c *Condition) ToLarkViewCondition() *bitable.AppTableViewPropertyFilterInfoCondition {
 	if c.operator == ConditionOpIsEmpty || c.operator == ConditionOpIsNotEmpty {
-		return larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Build()
+		return bitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Build()
 	}
 	b, _ := json.Marshal(c.value)
-	return larkbitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Value(string(b)).Build()
+	return bitable.NewAppTableViewPropertyFilterInfoConditionBuilder().FieldId(c.fieldId).Operator(c.operator).Value(string(b)).Build()
 }
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
