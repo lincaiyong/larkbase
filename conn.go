@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/bitable-overview
@@ -42,11 +43,29 @@ func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, e
 	for _, field := range fields {
 		switch field.Type() {
 		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Url", "AutoNumber", "ModifiedTime":
-			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", field.Name(), field.Type(), field.Name()))
+			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", toCamelCase(field.Name()), field.Type(), field.Name()))
 		}
 	}
 	sb.WriteString("}")
 	return sb.String(), nil
+}
+
+func toCamelCase(s string) string {
+	var sb strings.Builder
+	shouldUpper := true
+	for _, r := range s {
+		if r == '_' { // 下划线分隔符，将下一个字符转换为大写字母
+			shouldUpper = true
+		} else {
+			if shouldUpper && unicode.IsLetter(r) { // 需要转换为大写字母
+				sb.WriteRune(unicode.ToUpper(r))
+				shouldUpper = false
+			} else {
+				sb.WriteRune(unicode.ToLower(r))
+			}
+		}
+	}
+	return sb.String()
 }
 
 func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
