@@ -27,18 +27,12 @@ func queryAllPages(f func(pageToken string) (newPageToken string, err error)) er
 }
 
 func (c *Connection[T]) checkFields() error {
-	if c.fieldMap[modifiedTimeFieldName] == nil || c.fieldMap[modifiedTimeFieldName].Type() != "ModifiedTime" {
-		return fmt.Errorf("field \"%s\" with ModifiedTime type is required in struct: %s", modifiedTimeFieldName, c.structName)
-	}
 	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
 		return c.queryFieldsByPage(pageToken, fields)
 	})
 	if err != nil {
 		return err
-	}
-	if c.fieldMap[modifiedTimeFieldName].Type() != "ModifiedTime" {
-		return fmt.Errorf("field \"%s\" with ModifiedTime type is required in larkbase table: %s", modifiedTimeFieldName, c.tableUrl)
 	}
 	for name, structField := range c.fieldMap {
 		f, ok := fields[name]

@@ -55,7 +55,7 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	for i := range records {
 		conditions = append(conditions, conn.Condition().Name.Is(fmt.Sprintf("test-%d", i)))
 	}
-	err = conn.FindAll(&results, larkbase.FindOption{Filter: conn.FilterOr(conditions...)})
+	err = conn.FindAll(&results, larkbase.NewFindOption(conn.FilterOr(conditions...)))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -100,9 +100,7 @@ func main() {
 	//}
 
 	var records []*DemoRecord
-	err = conn.FindAll(&records, larkbase.FindOption{
-		Filter: nil,
-	})
+	err = conn.FindAll(&records, nil)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
