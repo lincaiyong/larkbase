@@ -6,11 +6,7 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
-	"github.com/lincaiyong/larkbase/larksuite/bitable"
-	"github.com/lincaiyong/log"
-	"gorm.io/gorm"
 	"strings"
-	"time"
 	"unicode"
 )
 
@@ -116,7 +112,10 @@ func (c *Connection[T]) Find(structPtr *T, opt *FindOption) error {
 	}
 	var err error
 	records := make([]*Record, 0)
-	records, _, err = c.queryRecordsByPage(opt.ViewId, opt.Filter, opt.Sorts, "", 1, records)
+	if opt == nil {
+		opt = &FindOption{}
+	}
+	records, _, err = c.queryRecordsByPage(opt.viewId, opt.filter, opt.sorts, "", 1, records)
 	if err != nil {
 		return err
 	}
@@ -140,12 +139,15 @@ func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, opt *FindOption) error 
 	}
 	records := make([]*Record, 0)
 	pageSize := 0
-	if opt.Limit > 0 {
-		pageSize = opt.Limit
+	if opt == nil {
+		opt = &FindOption{}
+	}
+	if opt.limit > 0 {
+		pageSize = opt.limit
 	}
 	if err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
-		records, newPageToken, err = c.queryRecordsByPage(opt.ViewId, opt.Filter, opt.Sorts, pageToken, pageSize, records)
-		if opt.Limit > 0 && len(records) >= opt.Limit {
+		records, newPageToken, err = c.queryRecordsByPage(opt.viewId, opt.filter, opt.sorts, pageToken, pageSize, records)
+		if opt.limit > 0 && len(records) >= opt.limit {
 			newPageToken = ""
 		}
 		return
