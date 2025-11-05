@@ -61,7 +61,7 @@ func toCamelCase(s string) string {
 func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
 	structPtr := new(T)
 	conn := &Connection[T]{ctx: ctx, condition: structPtr}
-	if err := conn.checkStructPtr(structPtr); err != nil {
+	if err := conn.checkStructPtr(structPtr, tableUrl); err != nil {
 		return nil, err
 	}
 	var err error

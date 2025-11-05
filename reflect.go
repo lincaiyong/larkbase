@@ -79,12 +79,14 @@ func (c *Connection[T]) fillStructPtrSlice(structPtrSlicePtr []*T) error {
 	return nil
 }
 
-func (c *Connection[T]) checkStructType(structType reflect.Type) error {
+func (c *Connection[T]) checkStructType(structType reflect.Type, tableUrl string) error {
 	if structType.NumField() == 0 {
 		return fmt.Errorf("user struct has no field")
 	}
 	metaField := structType.Field(0)
-	tableUrl := metaField.Tag.Get("lark")
+	if tableUrl == "" {
+		tableUrl = metaField.Tag.Get("lark")
+	}
 	if !metaField.Anonymous || metaField.Type.String() != "larkbase.Meta" || tableUrl == "" {
 		return fmt.Errorf("first field of user struct should be larkbase.Meta with tableUrl in lark tag")
 	}
@@ -106,17 +108,8 @@ func (c *Connection[T]) checkStructType(structType reflect.Type) error {
 	return nil
 }
 
-func (c *Connection[T]) checkStructPtr(structPtr *T) error {
-	return c.checkStructType(reflect.TypeOf(structPtr).Elem())
-}
-
-func (c *Connection[T]) checkStructPtrSlicePtr(structPtrSlicePtr *[]*T) error {
-	return c.checkStructType(reflect.TypeOf(structPtrSlicePtr).Elem().Elem().Elem())
-}
-
-func (c *Connection[T]) checkStructPtrSlice(structPtrSlice []*T) error {
-	structSliceType := reflect.TypeOf(structPtrSlice)
-	return c.checkStructType(structSliceType.Elem().Elem())
+func (c *Connection[T]) checkStructPtr(structPtr *T, tableUrl string) error {
+	return c.checkStructType(reflect.TypeOf(structPtr).Elem(), tableUrl)
 }
 
 func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, err error) {
