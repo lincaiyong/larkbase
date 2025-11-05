@@ -30,12 +30,15 @@ func convertToFieldType(s string) string {
 	return s[len("larkfield.") : len(s)-len("Field")] // a little bit hacking
 }
 
-func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T) (tableUrl, appToken, structName, tableId string, fields []larkfield.Field, err error) {
+func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T, tableUrl_ string) (tableUrl, appToken, structName, tableId string, fields []larkfield.Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	structType := structValue.Type()
 	metaField := structType.Field(0)
 	structName = structType.Name()
-	tableUrl = metaField.Tag.Get("lark")
+	tableUrl = tableUrl_
+	if tableUrl == "" {
+		tableUrl = metaField.Tag.Get("lark")
+	}
 	appToken, tableId = extractAppTokenTableIdFromUrl(tableUrl)
 	err = c.fillStructPtr(structPtr)
 	for i := 1; i < structType.NumField(); i++ {

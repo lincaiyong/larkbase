@@ -58,14 +58,14 @@ func toCamelCase(s string) string {
 	return sb.String()
 }
 
-func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
+func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
 	structPtr := new(T)
 	conn := &Connection[T]{ctx: ctx, condition: structPtr}
 	if err := conn.checkStructPtr(structPtr); err != nil {
 		return nil, err
 	}
 	var err error
-	conn.tableUrl, conn.appToken, conn.structName, conn.tableId, conn.fields, err = conn.extractAndFillConditionInstance(structPtr)
+	conn.tableUrl, conn.appToken, conn.structName, conn.tableId, conn.fields, err = conn.extractAndFillConditionInstance(structPtr, tableUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +80,10 @@ func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T
 		return nil, err
 	}
 	return conn, nil
+}
+
+func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
+	return ConnectWithUrl[T](ctx, appId, appSecret, "")
 }
 
 type Connection[T any] struct {
