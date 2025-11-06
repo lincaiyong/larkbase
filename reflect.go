@@ -63,7 +63,7 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 			return fmt.Errorf("%s is not exported", structType.Field(i).Name)
 		}
 		field := fieldValue.Addr().Interface().(larkfield.Field)
-		field.SetName(structField.Tag.Get("lark"))
+		field.SetName(c.fieldRealName(structField.Tag.Get("lark")))
 		field.SetType(convertToFieldType(structField.Type.String()))
 	}
 	return nil
@@ -133,11 +133,11 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 		}
 		hack := c.convertToHack(fieldValue)
 		field := reflect.New(structField.Type).Interface().(larkfield.Field)
-		tag := structField.Tag.Get("lark")
 		field.SetName(hack.Name())
 		field.SetType(hack.Type())
 		field.SetUnderlayValueNoDirty(hack.Value())
 		field.SetDirty(hack.Dirty())
+		tag := c.fieldRealName(structField.Tag.Get("lark"))
 		record.Fields[tag] = field
 	}
 	return
@@ -166,7 +166,7 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 			fieldValue.Set(reflect.ValueOf(meta))
 			continue
 		}
-		tag := structField.Tag.Get("lark")
+		tag := c.fieldRealName(structField.Tag.Get("lark"))
 		field, ok := record.Fields[tag]
 		if !ok {
 			continue

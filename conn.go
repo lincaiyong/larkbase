@@ -58,9 +58,9 @@ func toCamelCase(s string) string {
 	return sb.String()
 }
 
-func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
+func ConnectWithOpts[T any](ctx context.Context, appId, appSecret, tableUrl string, fieldNameMapping map[string]string) (*Connection[T], error) {
 	structPtr := new(T)
-	conn := &Connection[T]{ctx: ctx, condition: structPtr}
+	conn := &Connection[T]{ctx: ctx, condition: structPtr, fieldNameMapping: fieldNameMapping}
 	if err := conn.checkStructPtr(structPtr, tableUrl); err != nil {
 		return nil, err
 	}
@@ -82,6 +82,10 @@ func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl strin
 	return conn, nil
 }
 
+func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
+	return ConnectWithOpts[T](ctx, appId, appSecret, tableUrl, nil)
+}
+
 func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
 	return ConnectWithUrl[T](ctx, appId, appSecret, "")
 }
@@ -99,6 +103,17 @@ type Connection[T any] struct {
 	fields     []larkfield.Field
 	fieldNames []string
 	fieldMap   map[string]larkfield.Field
+
+	fieldNameMapping map[string]string
+}
+
+func (c *Connection[T]) fieldRealName(fieldName string) string {
+	if c.fieldNameMapping != nil {
+		if ret, ok := c.fieldNameMapping[fieldName]; ok {
+			return ret
+		}
+	}
+	return fieldName
 }
 
 var errorNotFound = errors.New("record not found")
