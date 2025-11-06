@@ -106,3 +106,32 @@ func (t Type) String() string {
 		return "?"
 	}
 }
+
+func (t Type) CreateField(base *BaseField) Field {
+	switch t {
+	case TypeText:
+		return &TextField{BaseField: *base}
+	case TypeNumber:
+		return &NumberField{BaseField: *base}
+	case TypeSingleSelect:
+		return &SingleSelectField{BaseField: *base}
+	case TypeMultiSelect:
+		return &MultiSelectField{BaseField: *base}
+	case TypeDate:
+		return &DateField{BaseField: *base}
+	case TypeCheckbox:
+		return &CheckboxField{BaseField: *base}
+	case TypeUrl:
+		return &UrlField{BaseField: *base}
+	case TypeLookup:
+		return &LookupField{BaseField: *base}
+	case TypeFormula:
+		return &FormulaField{BaseField: *base}
+	case TypeModifiedTime:
+		return &ModifiedTimeField{BaseField: *base}
+	case TypeAutoNumber:
+		return &AutoNumberField{BaseField: *base}
+	default:
+		return nil
+	}
+}

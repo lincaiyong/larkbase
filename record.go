@@ -24,3 +24,8 @@ func (r *Record) buildForLarkSuite() (map[string]any, error) {
 	}
 	return fields, nil
 }
+
+type AnyRecord struct {
+	Meta
+	Data map[string]string
+}

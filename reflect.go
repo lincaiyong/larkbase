@@ -158,11 +158,24 @@ func (c *Connection[T]) convertStructPtrSliceToRecords(structPtrSlice []*T) (rec
 func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) error {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	structType := structValue.Type()
+	meta := Meta{RecordId: record.Id, ModifiedTime: record.ModifiedTime}
+
+	if c.isAnyRecord {
+		metaField := structValue.Field(0)
+		metaField.Set(reflect.ValueOf(meta))
+		dataField := structValue.Field(1)
+		data := make(map[string]string)
+		for k, f := range record.Fields {
+			data[k] = f.StringValue()
+		}
+		dataField.Set(reflect.ValueOf(data))
+		return nil
+	}
+
 	for i := 0; i < structValue.NumField(); i++ {
 		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
 		if structField.Name == "Meta" {
-			meta := Meta{RecordId: record.Id, ModifiedTime: record.ModifiedTime}
 			fieldValue.Set(reflect.ValueOf(meta))
 			continue
 		}

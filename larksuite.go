@@ -56,6 +56,9 @@ func (c *Connection[T]) parseAppTableRecord(item *bitable.AppTableRecord) (*Reco
 		record.ModifiedTime = larkfield.UnixSecondsToTime((*item.LastModifiedTime) / 1000)
 	}
 	for name, value := range item.Fields {
+		if c.fieldMap[name] == nil {
+			continue
+		}
 		structField := c.fieldMap[name].Fork()
 		err := structField.Parse(value)
 		if err != nil {
@@ -221,8 +224,12 @@ func queryFieldsByPage(ctx context.Context, client *lark.Client, appToken, table
 	for _, item := range resp.Data.Items {
 		id := *item.FieldId
 		name := *item.FieldName
-		type_ := larkfield.Type(*item.Type).String()
-		fields[*item.FieldName] = larkfield.NewBaseField(id, name, type_)
+		ft := larkfield.Type(*item.Type)
+		type_ := ft.String()
+		field := ft.CreateField(larkfield.NewBaseField(id, name, type_))
+		if field != nil {
+			fields[*item.FieldName] = field
+		}
 	}
 	hasMore := *resp.Data.HasMore
 	if hasMore {

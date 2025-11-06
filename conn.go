@@ -58,6 +58,32 @@ func toCamelCase(s string) string {
 	return sb.String()
 }
 
+func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connection[AnyRecord], error) {
+	conn := &Connection[AnyRecord]{
+		ctx:         ctx,
+		tableUrl:    tableUrl,
+		isAnyRecord: true,
+	}
+	var err error
+	conn.appToken, conn.tableId = extractAppTokenTableIdFromUrl(tableUrl)
+	if conn.appToken == "" || conn.tableId == "" {
+		return nil, fmt.Errorf("invalid table url: %s", tableUrl)
+	}
+	conn.client = lark.NewClient(appId, appSecret)
+	fields := make(map[string]larkfield.Field)
+	err = queryAllPages(func(pageToken string) (newPageToken string, err error) {
+		return conn.queryFieldsByPage(pageToken, fields)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fail to query fields: %v", err)
+	}
+	conn.fieldMap = make(map[string]larkfield.Field)
+	for _, field := range fields {
+		conn.fieldMap[field.Name()] = field
+	}
+	return conn, nil
+}
+
 func ConnectWithOpts[T any](ctx context.Context, appId, appSecret, tableUrl string, fieldNameMapping map[string]string) (*Connection[T], error) {
 	structPtr := new(T)
 	conn := &Connection[T]{ctx: ctx, condition: structPtr, fieldNameMapping: fieldNameMapping}
@@ -105,6 +131,8 @@ type Connection[T any] struct {
 	fieldMap   map[string]larkfield.Field
 
 	fieldNameMapping map[string]string
+
+	isAnyRecord bool
 }
 
 func (c *Connection[T]) fieldRealName(fieldName string) string {
