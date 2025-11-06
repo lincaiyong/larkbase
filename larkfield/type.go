@@ -37,23 +37,9 @@ const TypeSingleSelect Type = 3
 const TypeMultiSelect Type = 4
 const TypeDate Type = 5
 const TypeCheckbox Type = 7
-const TypePerson Type = 11
-const TypePhone Type = 13
 const TypeUrl Type = 15
-const TypeMedia Type = 17
-const TypeSingleLink Type = 18
-const TypeLookup Type = 19
-const TypeFormula Type = 20
-const TypeDuplexLink Type = 21
-const TypeLocation Type = 22
-const TypeGroup Type = 23
-const TypeWorkflow Type = 24
-const TypeCreatedTime Type = 1001
 const TypeModifiedTime Type = 1002
-const TypeCreatePerson Type = 1003
-const TypeModifyPerson Type = 1004
 const TypeAutoNumber Type = 1005
-const TypeButton Type = 3001
 
 func (t Type) String() string {
 	switch t {
@@ -69,40 +55,12 @@ func (t Type) String() string {
 		return "Date"
 	case TypeCheckbox:
 		return "Checkbox"
-	case TypePerson:
-		return "Person"
-	case TypePhone:
-		return "Phone"
 	case TypeUrl:
 		return "Url"
-	case TypeMedia:
-		return "Media"
-	case TypeSingleLink:
-		return "SingleLink"
-	case TypeLookup:
-		return "Lookup"
-	case TypeFormula:
-		return "Formula"
-	case TypeDuplexLink:
-		return "DuplexLink"
-	case TypeLocation:
-		return "Location"
-	case TypeGroup:
-		return "Group"
-	case TypeWorkflow:
-		return "Workflow"
-	case TypeCreatedTime:
-		return "CreatedTime"
 	case TypeModifiedTime:
 		return "ModifiedTime"
-	case TypeCreatePerson:
-		return "CreatePerson"
-	case TypeModifyPerson:
-		return "ModifyPerson"
 	case TypeAutoNumber:
 		return "AutoNumber"
-	case TypeButton:
-		return "Button"
 	default:
 		return "?"
 	}
@@ -138,14 +96,6 @@ func (t Type) CreateField(id, name string, type_ Type) Field {
 		ret := &UrlField{}
 		ret.BaseField = NewBaseField(ret, id, name, type_)
 		return ret
-	case TypeLookup:
-		ret := &LookupField{}
-		ret.BaseField = NewBaseField(ret, id, name, type_)
-		return ret
-	case TypeFormula:
-		ret := &FormulaField{}
-		ret.BaseField = NewBaseField(ret, id, name, type_)
-		return ret
 	case TypeModifiedTime:
 		ret := &ModifiedTimeField{}
 		ret.BaseField = NewBaseField(ret, id, name, type_)
@@ -173,40 +123,12 @@ func TypeFromString(s string) Type {
 		return TypeDate
 	case "Checkbox":
 		return TypeCheckbox
-	case "Person":
-		return TypePerson
-	case "Phone":
-		return TypePhone
 	case "Url":
 		return TypeUrl
-	case "Media":
-		return TypeMedia
-	case "SingleLink":
-		return TypeSingleLink
-	case "Lookup":
-		return TypeLookup
-	case "Formula":
-		return TypeFormula
-	case "DuplexLink":
-		return TypeDuplexLink
-	case "Location":
-		return TypeLocation
-	case "Group":
-		return TypeGroup
-	case "Workflow":
-		return TypeWorkflow
-	case "CreatedTime":
-		return TypeCreatedTime
 	case "ModifiedTime":
 		return TypeModifiedTime
-	case "CreatePerson":
-		return TypeCreatePerson
-	case "ModifyPerson":
-		return TypeModifyPerson
 	case "AutoNumber":
 		return TypeAutoNumber
-	case "Button":
-		return TypeButton
 	default:
 		return TypeUnknown
 	}

@@ -6,14 +6,20 @@ import (
 )
 
 type NumberField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *NumberField) SetIntValue(v int) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeNumber)
+	//}
 	f.SetUnderlayValue(float64(v))
 }
 
 func (f *NumberField) SetValue(v float64) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeNumber)
+	//}
 	f.SetUnderlayValue(v)
 }
 

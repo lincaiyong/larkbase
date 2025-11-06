@@ -1,10 +1,13 @@
 package larkfield
 
 type SingleSelectField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *SingleSelectField) SetValue(v string) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeSingleSelect)
+	//}
 	f.SetUnderlayValue(v)
 }
 

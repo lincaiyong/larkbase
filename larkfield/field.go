@@ -1,6 +1,7 @@
 package larkfield
 
 type Field interface {
+	SetSelf(Field)
 	Id() string
 	SetId(string)
 	Name() string

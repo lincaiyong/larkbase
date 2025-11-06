@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func NewBaseField(self Field, id, name string, type_ Type) *BaseField {
-	return &BaseField{
+func NewBaseField(self Field, id, name string, type_ Type) BaseField {
+	return BaseField{
 		self:    self,
 		id:      id,
 		name:    name,
@@ -24,6 +24,10 @@ type BaseField struct {
 	type_   Type
 	value   any
 	dirty   bool
+}
+
+func (f *BaseField) SetSelf(field Field) {
+	f.self = field
 }
 
 func (f *BaseField) Id() string {

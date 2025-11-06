@@ -1,10 +1,13 @@
 package larkfield
 
 type UrlField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *UrlField) SetValue(v string) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeUrl)
+	//}
 	f.SetUnderlayValue(v)
 }
 

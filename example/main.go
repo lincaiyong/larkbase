@@ -24,8 +24,6 @@ type DemoRecord struct {
 	Code         larkbase.BarcodeField      `lark:"条码"`
 	Currency     larkbase.CurrencyField     `lark:"货币"`
 	Rating       larkbase.RatingField       `lark:"评分"`
-	Lookup       larkbase.LookupField       `lark:"lookup"`
-	Formula      larkbase.FormulaField      `lark:"formula"`
 	ModifiedTime larkbase.ModifiedTimeField `lark:"modified_time"`
 }
 
@@ -99,21 +97,21 @@ func main() {
 	//	os.Exit(1)
 	//}
 
-	var records []*DemoRecord
-	err = conn.FindAll(&records, nil)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(conn.MarshalIgnoreError(records))
-
-	s, err := larkbase.DescribeTable(context.Background(), larkAppId, larkAppSecret, "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(s)
-	return
+	//var records []*DemoRecord
+	//err = conn.FindAll(&records, nil)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(conn.MarshalIgnoreError(records))
+	//
+	//s, err := larkbase.DescribeTable(context.Background(), larkAppId, larkAppSecret, "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y")
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(s)
+	//return
 
 	//conn, err := larkbase.Connect[DemoRecord](larkAppId, larkAppSecret)
 	//if err != nil {
@@ -138,72 +136,72 @@ func main() {
 	//
 	//testBatch(conn)
 	//
-	//var r DemoRecord
-	//r.Name.SetValue("test")
-	//err = conn.Create(&r)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//time.Sleep(3 * time.Second)
-	//s, err := conn.MarshalRecord(&r)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//fmt.Println(s)
-	//
-	//r.Name.SetValue("test2")
-	//err = conn.Update(&r)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//err = conn.Delete(&r)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//var record DemoRecord
-	//err = conn.Find(&record, conn.FilterAnd(conn.Condition().Name.Is("andy")))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//s, err = conn.MarshalRecord(&record)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//fmt.Println(s)
-	//
-	//record.Age.SetIntValue(123456)
-	//record.Date.SetValue(time.Now())
-	//err = conn.Update(&record)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//
-	//var records []*DemoRecord
-	//err = conn.FindAll(&records, conn.FilterAnd(conn.Condition().Name.IsNot("andy")))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//s, err = conn.MarshalRecords(records)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//fmt.Println(s)
-	//
-	//for _, r := range records {
-	//	r.Date.SetValue(time.Now())
-	//}
-	//err = conn.UpdateAll(records)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
+	var r DemoRecord
+	r.Name.SetValue("test")
+	err = conn.Create(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	time.Sleep(3 * time.Second)
+	s, err := conn.MarshalRecord(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+
+	r.Name.SetValue("test2")
+	err = conn.Update(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	err = conn.Delete(&r)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	var record DemoRecord
+	err = conn.Find(&record, larkbase.NewFindOption(conn.FilterAnd(conn.Condition().Name.Is("andy"))))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	s, err = conn.MarshalRecord(&record)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+
+	record.Age.SetIntValue(123456)
+	record.Date.SetValue(time.Now())
+	err = conn.Update(&record)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	var records []*DemoRecord
+	err = conn.FindAll(&records, larkbase.NewFindOption(conn.FilterAnd(conn.Condition().Name.IsNot("andy"))))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	s, err = conn.MarshalRecords(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(s)
+
+	for _, r := range records {
+		r.Date.SetValue(time.Now())
+	}
+	err = conn.UpdateAll(records)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

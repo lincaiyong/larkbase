@@ -15,7 +15,7 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
 func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, error) {
-	appToken, tableId := extractAppTokenTableIdFromUrl(url)
+	appToken, tableId, _ := extractAppTokenTableIdViewIdFromUrl(url)
 	if appToken == "" || tableId == "" {
 		return "", fmt.Errorf("invalid table url: %s", url)
 	}
@@ -65,7 +65,7 @@ func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connec
 		isAnyRecord: true,
 	}
 	var err error
-	conn.appToken, conn.tableId = extractAppTokenTableIdFromUrl(tableUrl)
+	conn.appToken, conn.tableId, conn.viewId = extractAppTokenTableIdViewIdFromUrl(tableUrl)
 	if conn.appToken == "" || conn.tableId == "" {
 		return nil, fmt.Errorf("invalid table url: %s", tableUrl)
 	}
@@ -91,7 +91,7 @@ func ConnectWithOpts[T any](ctx context.Context, appId, appSecret, tableUrl stri
 		return nil, err
 	}
 	var err error
-	conn.tableUrl, conn.appToken, conn.structName, conn.tableId, conn.fields, err = conn.extractAndFillConditionInstance(structPtr, tableUrl)
+	conn.tableUrl, conn.appToken, conn.structName, conn.tableId, conn.viewId, conn.fields, err = conn.extractAndFillConditionInstance(structPtr, tableUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +126,7 @@ type Connection[T any] struct {
 	appToken   string
 	structName string
 	tableId    string
+	viewId     string
 	fields     []larkfield.Field
 	fieldNames []string
 	fieldMap   map[string]larkfield.Field

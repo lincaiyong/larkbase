@@ -5,10 +5,13 @@ import (
 )
 
 type DateField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *DateField) SetValue(t time.Time) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeDate)
+	//}
 	f.SetUnderlayValue(t)
 }
 

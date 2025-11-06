@@ -1,10 +1,13 @@
 package larkfield
 
 type MultiSelectField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *MultiSelectField) SetValue(v []string) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeMultiSelect)
+	//}
 	f.SetUnderlayValue(v)
 }
 

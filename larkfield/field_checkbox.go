@@ -5,10 +5,13 @@ import (
 )
 
 type CheckboxField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *CheckboxField) SetValue(b bool) {
+	//if f.BaseField == nil {
+	//	f.BaseField = NewBaseField(f, "", "", TypeCheckbox)
+	//}
 	f.SetUnderlayValue(b)
 }
 

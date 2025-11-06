@@ -10,22 +10,38 @@ import (
 	"strings"
 )
 
-func extractAppTokenTableIdFromUrl(url string) (string, string) {
-	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)`)
+func extractAppTokenTableIdViewIdFromUrl(url string) (string, string, string) {
+	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)(?:&view=(\w+))?`)
 	match := re.FindStringSubmatch(url)
-	if len(match) != 3 {
-		return "", ""
+	if len(match) != 4 {
+		return "", "", ""
 	}
 	appToken := match[1]
 	tableId := match[2]
-	return appToken, tableId
+	viewId := match[3]
+	return appToken, tableId, viewId
 }
 
-func convertToFieldType(s string) string {
-	return s[len("larkfield.") : len(s)-len("Field")] // a little bit hacking
+func (c *Connection[T]) fieldTypeFromStructField(structField reflect.StructField) larkfield.Type {
+	s := structField.Type.String()
+	s = s[len("larkfield.") : len(s)-len("Field")]
+	return larkfield.TypeFromString(s)
 }
 
-func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T, tableUrl_ string) (tableUrl, appToken, structName, tableId string, fields []larkfield.Field, err error) {
+func (c *Connection[T]) fieldNameFromStructField(structField reflect.StructField) string {
+	return c.fieldRealName(structField.Tag.Get("lark"))
+}
+
+func (c *Connection[T]) fieldFromStructField(structField reflect.StructField) (larkfield.Field, error) {
+	ft := c.fieldTypeFromStructField(structField)
+	if ft == larkfield.TypeUnknown {
+		return nil, fmt.Errorf("field type of %s is not supported", structField.Type.String())
+	}
+	name := c.fieldRealName(structField.Tag.Get("lark"))
+	return ft.CreateField("", name, ft), nil
+}
+
+func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T, tableUrl_ string) (tableUrl, appToken, structName, tableId, viewId string, fields []larkfield.Field, err error) {
 	structValue := reflect.ValueOf(structPtr).Elem()
 	structType := structValue.Type()
 	metaField := structType.Field(0)
@@ -34,15 +50,20 @@ func (c *Connection[T]) extractAndFillConditionInstance(structPtr *T, tableUrl_ 
 	if tableUrl == "" {
 		tableUrl = metaField.Tag.Get("lark")
 	}
-	appToken, tableId = extractAppTokenTableIdFromUrl(tableUrl)
+	appToken, tableId, viewId = extractAppTokenTableIdViewIdFromUrl(tableUrl)
 	err = c.fillStructPtr(structPtr)
 	for i := 1; i < structType.NumField(); i++ {
+		structField := structType.Field(i)
 		fieldValue := structValue.Field(i)
 		if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
 			err = fmt.Errorf("%s is not exported", structType.Field(i).Name)
 			return
 		}
-		field := fieldValue.Addr().Interface().(larkfield.Field)
+		var field larkfield.Field
+		field, err = c.fieldFromStructField(structField)
+		if err != nil {
+			return
+		}
 		fields = append(fields, field)
 	}
 	return
@@ -57,12 +78,10 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 		if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
 			return fmt.Errorf("%s is not exported", structType.Field(i).Name)
 		}
-		ft := larkfield.TypeFromString(convertToFieldType(structField.Type.String()))
-		if ft == larkfield.TypeUnknown {
-			return fmt.Errorf("%s is not supported", structField.Type.String())
-		}
-		v := ft.CreateField("", c.fieldRealName(structField.Tag.Get("lark")), ft)
-		fieldValue.Set(reflect.ValueOf(v).Elem())
+		field := fieldValue.Addr().Interface().(larkfield.Field)
+		field.SetSelf(field)
+		field.SetName(c.fieldNameFromStructField(structField))
+		field.SetType(c.fieldTypeFromStructField(structField))
 	}
 	return nil
 }
@@ -88,7 +107,7 @@ func (c *Connection[T]) checkStructType(structType reflect.Type, tableUrl string
 	if !metaField.Anonymous || metaField.Type.String() != "larkbase.Meta" || tableUrl == "" {
 		return fmt.Errorf("first field of user struct should be larkbase.Meta with tableUrl in lark tag")
 	}
-	appToken, tableId := extractAppTokenTableIdFromUrl(tableUrl)
+	appToken, tableId, _ := extractAppTokenTableIdViewIdFromUrl(tableUrl)
 	if appToken == "" || tableId == "" {
 		return fmt.Errorf("tableUrl is invalid: %s", tableUrl)
 	}
@@ -129,15 +148,8 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 			record.ModifiedTime = meta.ModifiedTime
 			continue
 		}
-		panic("TODO")
-		//hack := c.convertToHack(fieldValue)
-		//field := reflect.New(structField.Type).Interface().(larkfield.Field)
-		//field.SetName(hack.Name())
-		//field.SetType(hack.Type())
-		//field.SetUnderlayValueNoDirty(hack.Value())
-		//field.SetDirty(hack.Dirty())
-		//tag := c.fieldRealName(structField.Tag.Get("lark"))
-		//record.Fields[tag] = field
+		field := fieldValue.Addr().Interface().(larkfield.Field)
+		record.Fields[field.Name()] = field
 	}
 	return
 }
@@ -178,19 +190,18 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 			fieldValue.Set(reflect.ValueOf(meta))
 			continue
 		}
-		tag := c.fieldRealName(structField.Tag.Get("lark"))
-		field, ok := record.Fields[tag]
+		name := c.fieldRealName(structField.Tag.Get("lark"))
+		field, ok := record.Fields[name]
 		if !ok {
 			continue
 		}
-		ft := larkfield.TypeFromString(convertToFieldType(structField.Type.String()))
-		if ft == larkfield.TypeUnknown {
-			return fmt.Errorf("field type of %s is not supported", structField.Type.String())
+		newField, err := c.fieldFromStructField(structField)
+		if err != nil {
+			return err
 		}
 		value := field.UnderlayValue()
-		ff := ft.CreateField("", tag, ft)
-		ff.SetUnderlayValueNoDirty(value)
-		fieldValue.Set(reflect.ValueOf(ff).Elem())
+		newField.SetUnderlayValueNoDirty(value)
+		fieldValue.Set(reflect.ValueOf(newField).Elem())
 	}
 	return nil
 }
@@ -222,13 +233,9 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]string, error
 			m["_record_id"] = meta.RecordId
 			continue
 		}
-		baseFieldValue := fieldValue.Field(0)
-		base := baseFieldValue.Convert(reflect.TypeOf(&larkfield.BaseField{})).Interface().(*larkfield.BaseField)
-		if base == nil {
-			continue
-		}
-		name := base.Name()
-		value := base.StringValue()
+		field := fieldValue.Addr().Interface().(larkfield.Field)
+		name := field.Name()
+		value := field.StringValue()
 		if value != "" {
 			m[name] = value
 		}

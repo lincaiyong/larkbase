@@ -3,7 +3,7 @@ package larkfield
 import "time"
 
 type ModifiedTimeField struct {
-	*BaseField
+	BaseField
 }
 
 func (f *ModifiedTimeField) IsGreater(time time.Time) *Condition {
