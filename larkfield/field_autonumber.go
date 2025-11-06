@@ -6,7 +6,7 @@ import (
 )
 
 type AutoNumberField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *AutoNumberField) Value() int {

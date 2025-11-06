@@ -16,7 +16,7 @@ const updatedTimeFieldName = "updated_time"
 const idFieldName = "id"
 
 func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
-	if c.fieldMap[modifiedTimeFieldName] == nil || c.fieldMap[modifiedTimeFieldName].Type() != "ModifiedTime" {
+	if c.fieldMap[modifiedTimeFieldName] == nil || c.fieldMap[modifiedTimeFieldName].TypeStr() != "ModifiedTime" {
 		return fmt.Errorf("field \"%s\" with ModifiedTime type is required in struct: %s", modifiedTimeFieldName, c.structName)
 	}
 	items := make([]string, 0)
@@ -123,10 +123,10 @@ func (c *Connection[T]) SyncToDatabase(db *gorm.DB, batchSize int) error {
 }
 
 func (c *Connection[T]) SyncFromApi(getUpdatedFunc func(context.Context, string, time.Time) []map[string]any) error {
-	if c.fieldMap[updatedTimeFieldName] == nil || c.fieldMap[updatedTimeFieldName].Type() != "Date" {
+	if c.fieldMap[updatedTimeFieldName] == nil || c.fieldMap[updatedTimeFieldName].TypeStr() != "Date" {
 		return fmt.Errorf("field \"%s\" with Date type is required in struct: %s", updatedTimeFieldName, c.structName)
 	}
-	if c.fieldMap[idFieldName] == nil || c.fieldMap[idFieldName].Type() != "Text" {
+	if c.fieldMap[idFieldName] == nil || c.fieldMap[idFieldName].TypeStr() != "Text" {
 		return fmt.Errorf("field \"%s\" with Text type is required in struct: %s", idFieldName, c.structName)
 	}
 	//var latestUpdatedAt time.Time

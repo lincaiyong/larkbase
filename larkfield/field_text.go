@@ -3,7 +3,7 @@ package larkfield
 import "github.com/lincaiyong/log"
 
 type TextField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *TextField) SetValue(v string) {

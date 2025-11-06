@@ -37,7 +37,7 @@ func (f *NumberField) Parse(v any) error {
 		f.value = vv
 		return nil
 	} else {
-		return parseError(f.type_, "float64", v)
+		return parseError(f.typeStr, "float64", v)
 	}
 }
 
@@ -46,7 +46,7 @@ func (f *SingleSelectField) Parse(v any) error {
 		f.value = v1
 		return nil
 	} else {
-		return parseError(f.type_, "string", v)
+		return parseError(f.typeStr, "string", v)
 	}
 }
 
@@ -65,7 +65,7 @@ func (f *DateField) Parse(v any) error {
 		f.value = UnixSecondsToTime(int64(v1 / 1000))
 		return nil
 	} else {
-		return parseError(f.type_, "float64", v)
+		return parseError(f.typeStr, "float64", v)
 	}
 }
 
@@ -74,7 +74,7 @@ func (f *CheckboxField) Parse(v any) error {
 		f.value = val
 		return nil
 	} else {
-		return parseError(f.type_, "bool", v)
+		return parseError(f.typeStr, "bool", v)
 	}
 }
 
@@ -87,16 +87,16 @@ func (f *CheckboxField) Parse(v any) error {
 //				if v4, ok4 := v3["name"].(string); ok4 {
 //					items = append(items, v4)
 //				} else {
-//					return parseError(f.type_, "string", v3["name"])
+//					return parseError(f.typeStr, "string", v3["name"])
 //				}
 //			} else {
-//				return parseError(f.type_, "map[string]any", v2)
+//				return parseError(f.typeStr, "map[string]any", v2)
 //			}
 //		}
 //		f.value = items
 //		return nil
 //	} else {
-//		return parseError(f.type_, "[]any", v)
+//		return parseError(f.typeStr, "[]any", v)
 //	}
 //}
 //
@@ -105,7 +105,7 @@ func (f *CheckboxField) Parse(v any) error {
 //		f.value = v1
 //		return nil
 //	} else {
-//		return parseError(f.type_, "string", v)
+//		return parseError(f.typeStr, "string", v)
 //	}
 //}
 
@@ -129,16 +129,16 @@ func (f *UrlField) Parse(v any) error {
 //			if v3, ok3 := v2.(map[string]any); ok3 {
 //				fileToken, ok4 := v3["file_token"].(string)
 //				if !ok4 {
-//					return parseError(f.type_, "string", v3["file_token"])
+//					return parseError(f.typeStr, "string", v3["file_token"])
 //				}
 //				items = append(items, fileToken)
 //			} else {
-//				return parseError(f.type_, "map[string]any", v2)
+//				return parseError(f.typeStr, "map[string]any", v2)
 //			}
 //		}
 //		return nil
 //	} else {
-//		return parseError(f.type_, "[]any", v)
+//		return parseError(f.typeStr, "[]any", v)
 //	}
 //}
 
@@ -147,7 +147,7 @@ func (f *AutoNumberField) Parse(v any) error {
 		f.value = int(val)
 		return nil
 	} else {
-		return parseError(f.type_, "integer string", v)
+		return parseError(f.typeStr, "integer string", v)
 	}
 }
 
@@ -156,7 +156,7 @@ func (f *ModifiedTimeField) Parse(v any) error {
 		f.value = UnixSecondsToTime(int64(v1 / 1000))
 		return nil
 	} else {
-		return parseError(f.type_, "float64", v)
+		return parseError(f.typeStr, "float64", v)
 	}
 }
 
@@ -171,21 +171,21 @@ func parseAnyTypeField(v any) (string, error) {
 	}
 	switch data.Type {
 	case TypeText:
-		f := &TextField{}
+		f := TypeText.CreateField("", "", TypeText)
 		err = f.Parse(data.Value)
 		if err != nil {
 			return "", err
 		}
 		return f.StringValue(), nil
 	case TypeNumber:
-		f := &NumberField{}
+		f := TypeNumber.CreateField("", "", TypeNumber)
 		err = f.Parse(data.Value)
 		if err != nil {
 			return "", err
 		}
 		return f.StringValue(), nil
 	case TypeSingleSelect:
-		f := &SingleSelectField{}
+		f := TypeSingleSelect.CreateField("", "", TypeSingleSelect)
 		err = f.Parse(data.Value)
 		if err != nil {
 			return "", err

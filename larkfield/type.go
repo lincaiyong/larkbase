@@ -28,31 +28,32 @@ https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-field
 3001：按钮（不支持通过写接口新增或编辑，仅支持读接口）
 */
 
-const TypeText = 1
-const TypeNumber = 2
-const TypeSingleSelect = 3
-const TypeMultiSelect = 4
-const TypeDate = 5
-const TypeCheckbox = 7
-const TypePerson = 11
-const TypePhone = 13
-const TypeUrl = 15
-const TypeMedia = 17
-const TypeSingleLink = 18
-const TypeLookup = 19
-const TypeFormula = 20
-const TypeDuplexLink = 21
-const TypeLocation = 22
-const TypeGroup = 23
-const TypeWorkflow = 24
-const TypeCreatedTime = 1001
-const TypeModifiedTime = 1002
-const TypeCreatePerson = 1003
-const TypeModifyPerson = 1004
-const TypeAutoNumber = 1005
-const TypeButton = 3001
-
 type Type int
+
+const TypeUnknown Type = 0
+const TypeText Type = 1
+const TypeNumber Type = 2
+const TypeSingleSelect Type = 3
+const TypeMultiSelect Type = 4
+const TypeDate Type = 5
+const TypeCheckbox Type = 7
+const TypePerson Type = 11
+const TypePhone Type = 13
+const TypeUrl Type = 15
+const TypeMedia Type = 17
+const TypeSingleLink Type = 18
+const TypeLookup Type = 19
+const TypeFormula Type = 20
+const TypeDuplexLink Type = 21
+const TypeLocation Type = 22
+const TypeGroup Type = 23
+const TypeWorkflow Type = 24
+const TypeCreatedTime Type = 1001
+const TypeModifiedTime Type = 1002
+const TypeCreatePerson Type = 1003
+const TypeModifyPerson Type = 1004
+const TypeAutoNumber Type = 1005
+const TypeButton Type = 3001
 
 func (t Type) String() string {
 	switch t {
@@ -107,31 +108,106 @@ func (t Type) String() string {
 	}
 }
 
-func (t Type) CreateField(base *BaseField) Field {
+func (t Type) CreateField(id, name string, type_ Type) Field {
 	switch t {
 	case TypeText:
-		return &TextField{BaseField: *base}
+		ret := &TextField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeNumber:
-		return &NumberField{BaseField: *base}
+		ret := &NumberField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeSingleSelect:
-		return &SingleSelectField{BaseField: *base}
+		ret := &SingleSelectField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeMultiSelect:
-		return &MultiSelectField{BaseField: *base}
+		ret := &MultiSelectField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeDate:
-		return &DateField{BaseField: *base}
+		ret := &DateField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeCheckbox:
-		return &CheckboxField{BaseField: *base}
+		ret := &CheckboxField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeUrl:
-		return &UrlField{BaseField: *base}
+		ret := &UrlField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeLookup:
-		return &LookupField{BaseField: *base}
+		ret := &LookupField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeFormula:
-		return &FormulaField{BaseField: *base}
+		ret := &FormulaField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeModifiedTime:
-		return &ModifiedTimeField{BaseField: *base}
+		ret := &ModifiedTimeField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeAutoNumber:
-		return &AutoNumberField{BaseField: *base}
+		ret := &AutoNumberField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	default:
 		return nil
+	}
+}
+
+func TypeFromString(s string) Type {
+	switch s {
+	case "Text":
+		return TypeText
+	case "Number":
+		return TypeNumber
+	case "SingleSelect":
+		return TypeSingleSelect
+	case "MultiSelect":
+		return TypeMultiSelect
+	case "Date":
+		return TypeDate
+	case "Checkbox":
+		return TypeCheckbox
+	case "Person":
+		return TypePerson
+	case "Phone":
+		return TypePhone
+	case "Url":
+		return TypeUrl
+	case "Media":
+		return TypeMedia
+	case "SingleLink":
+		return TypeSingleLink
+	case "Lookup":
+		return TypeLookup
+	case "Formula":
+		return TypeFormula
+	case "DuplexLink":
+		return TypeDuplexLink
+	case "Location":
+		return TypeLocation
+	case "Group":
+		return TypeGroup
+	case "Workflow":
+		return TypeWorkflow
+	case "CreatedTime":
+		return TypeCreatedTime
+	case "ModifiedTime":
+		return TypeModifiedTime
+	case "CreatePerson":
+		return TypeCreatePerson
+	case "ModifyPerson":
+		return TypeModifyPerson
+	case "AutoNumber":
+		return TypeAutoNumber
+	case "Button":
+		return TypeButton
+	default:
+		return TypeUnknown
 	}
 }

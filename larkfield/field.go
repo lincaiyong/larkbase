@@ -5,8 +5,9 @@ type Field interface {
 	SetId(string)
 	Name() string
 	SetName(string)
-	Type() string
-	SetType(string)
+	TypeStr() string
+	Type() Type
+	SetType(Type)
 	UnderlayValue() any
 	SetUnderlayValue(any)
 	SetUnderlayValueNoDirty(any)

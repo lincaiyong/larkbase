@@ -31,7 +31,7 @@ func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, e
 	sb.WriteString("type Record struct {\n")
 	sb.WriteString(fmt.Sprintf("    larkbase.Meta `lark:\"%s\"`\n\n", url))
 	for _, field := range fields {
-		switch field.Type() {
+		switch field.TypeStr() {
 		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Url", "AutoNumber", "ModifiedTime":
 			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", toCamelCase(field.Name()), field.Type(), field.Name()))
 		}

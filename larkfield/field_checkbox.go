@@ -5,7 +5,7 @@ import (
 )
 
 type CheckboxField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *CheckboxField) SetValue(b bool) {

@@ -10,11 +10,6 @@ import (
 	"strings"
 )
 
-func (c *Connection[T]) convertToHack(fieldValue reflect.Value) larkfield.HackBaseField {
-	baseFieldPtr := fieldValue.Field(0)
-	return baseFieldPtr.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
-}
-
 func extractAppTokenTableIdFromUrl(url string) (string, string) {
 	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)`)
 	match := re.FindStringSubmatch(url)
@@ -62,9 +57,12 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 		if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
 			return fmt.Errorf("%s is not exported", structType.Field(i).Name)
 		}
-		field := fieldValue.Addr().Interface().(larkfield.Field)
-		field.SetName(c.fieldRealName(structField.Tag.Get("lark")))
-		field.SetType(convertToFieldType(structField.Type.String()))
+		ft := larkfield.TypeFromString(convertToFieldType(structField.Type.String()))
+		if ft == larkfield.TypeUnknown {
+			return fmt.Errorf("%s is not supported", structField.Type.String())
+		}
+		v := ft.CreateField("", c.fieldRealName(structField.Tag.Get("lark")), ft)
+		fieldValue.Set(reflect.ValueOf(v).Elem())
 	}
 	return nil
 }
@@ -131,14 +129,15 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 			record.ModifiedTime = meta.ModifiedTime
 			continue
 		}
-		hack := c.convertToHack(fieldValue)
-		field := reflect.New(structField.Type).Interface().(larkfield.Field)
-		field.SetName(hack.Name())
-		field.SetType(hack.Type())
-		field.SetUnderlayValueNoDirty(hack.Value())
-		field.SetDirty(hack.Dirty())
-		tag := c.fieldRealName(structField.Tag.Get("lark"))
-		record.Fields[tag] = field
+		panic("TODO")
+		//hack := c.convertToHack(fieldValue)
+		//field := reflect.New(structField.Type).Interface().(larkfield.Field)
+		//field.SetName(hack.Name())
+		//field.SetType(hack.Type())
+		//field.SetUnderlayValueNoDirty(hack.Value())
+		//field.SetDirty(hack.Dirty())
+		//tag := c.fieldRealName(structField.Tag.Get("lark"))
+		//record.Fields[tag] = field
 	}
 	return
 }
@@ -184,10 +183,12 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 		if !ok {
 			continue
 		}
+		ft := larkfield.TypeFromString(convertToFieldType(structField.Type.String()))
+		if ft == larkfield.TypeUnknown {
+			return fmt.Errorf("field type of %s is not supported", structField.Type.String())
+		}
 		value := field.UnderlayValue()
-		ff := reflect.New(structField.Type).Interface().(larkfield.Field)
-		ff.SetName(tag)
-		ff.SetType(convertToFieldType(structField.Type.String()))
+		ff := ft.CreateField("", tag, ft)
 		ff.SetUnderlayValueNoDirty(value)
 		fieldValue.Set(reflect.ValueOf(ff).Elem())
 	}
@@ -222,9 +223,12 @@ func (c *Connection[T]) marshalStructPtr(structPtr *T) (map[string]string, error
 			continue
 		}
 		baseFieldValue := fieldValue.Field(0)
-		hack := baseFieldValue.Convert(reflect.TypeOf(larkfield.HackBaseField{})).Interface().(larkfield.HackBaseField)
-		name := hack.Name()
-		value := hack.StringValue()
+		base := baseFieldValue.Convert(reflect.TypeOf(&larkfield.BaseField{})).Interface().(*larkfield.BaseField)
+		if base == nil {
+			continue
+		}
+		name := base.Name()
+		value := base.StringValue()
 		if value != "" {
 			m[name] = value
 		}

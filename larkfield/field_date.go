@@ -5,7 +5,7 @@ import (
 )
 
 type DateField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *DateField) SetValue(t time.Time) {

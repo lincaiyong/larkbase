@@ -6,20 +6,24 @@ import (
 	"time"
 )
 
-func NewBaseField(id, name, type_ string) *BaseField {
+func NewBaseField(self Field, id, name string, type_ Type) *BaseField {
 	return &BaseField{
-		id:    id,
-		name:  name,
-		type_: type_,
+		self:    self,
+		id:      id,
+		name:    name,
+		typeStr: type_.String(),
+		type_:   type_,
 	}
 }
 
 type BaseField struct {
-	id    string
-	name  string
-	type_ string
-	value any
-	dirty bool
+	self    Field
+	id      string
+	name    string
+	typeStr string
+	type_   Type
+	value   any
+	dirty   bool
 }
 
 func (f *BaseField) Id() string {
@@ -38,12 +42,17 @@ func (f *BaseField) SetName(name string) {
 	f.name = name
 }
 
-func (f *BaseField) Type() string {
+func (f *BaseField) TypeStr() string {
+	return f.typeStr
+}
+
+func (f *BaseField) Type() Type {
 	return f.type_
 }
 
-func (f *BaseField) SetType(type_ string) {
-	f.type_ = type_
+func (f *BaseField) SetType(t Type) {
+	f.type_ = t
+	f.typeStr = t.String()
 }
 
 func (f *BaseField) UnderlayValue() any {
@@ -90,16 +99,15 @@ func (f *BaseField) StringValue() string {
 }
 
 func (f *BaseField) Fork() Field {
-	panic("should not happen")
+	return f.type_.CreateField(f.id, f.name, f.type_)
 }
 
 func (f *BaseField) Parse(_ any) error {
-	panic("should not happen")
-	return nil
+	return f.self.Parse(f.value)
 }
 
 func (f *BaseField) Build() any {
-	panic("should not happen")
+	return f.self.Build()
 }
 
 func (f *BaseField) Asc() *bitable.Sort {
@@ -110,30 +118,4 @@ func (f *BaseField) Asc() *bitable.Sort {
 func (f *BaseField) Desc() *bitable.Sort {
 	builder := &bitable.SortBuilder{}
 	return builder.FieldName(f.name).Desc(true).Build()
-}
-
-type HackBaseField BaseField
-
-func (f HackBaseField) Id() string {
-	return f.id
-}
-
-func (f HackBaseField) Name() string {
-	return f.name
-}
-
-func (f HackBaseField) Type() string {
-	return f.type_
-}
-
-func (f HackBaseField) Value() any {
-	return f.value
-}
-
-func (f HackBaseField) StringValue() string {
-	return stringValue(f.value)
-}
-
-func (f HackBaseField) Dirty() bool {
-	return f.dirty
 }

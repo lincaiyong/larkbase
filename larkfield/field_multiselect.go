@@ -1,7 +1,7 @@
 package larkfield
 
 type MultiSelectField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *MultiSelectField) SetValue(v []string) {

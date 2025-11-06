@@ -225,8 +225,7 @@ func queryFieldsByPage(ctx context.Context, client *lark.Client, appToken, table
 		id := *item.FieldId
 		name := *item.FieldName
 		ft := larkfield.Type(*item.Type)
-		type_ := ft.String()
-		field := ft.CreateField(larkfield.NewBaseField(id, name, type_))
+		field := ft.CreateField(id, name, ft)
 		if field != nil {
 			fields[*item.FieldName] = field
 		}

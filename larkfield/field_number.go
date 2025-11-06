@@ -6,7 +6,7 @@ import (
 )
 
 type NumberField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *NumberField) SetIntValue(v int) {

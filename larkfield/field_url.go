@@ -1,7 +1,7 @@
 package larkfield
 
 type UrlField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *UrlField) SetValue(v string) {

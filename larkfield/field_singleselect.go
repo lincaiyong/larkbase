@@ -1,7 +1,7 @@
 package larkfield
 
 type SingleSelectField struct {
-	BaseField
+	*BaseField
 }
 
 func (f *SingleSelectField) SetValue(v string) {
