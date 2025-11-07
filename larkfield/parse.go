@@ -179,7 +179,11 @@ func parseAnyTypeField(v any) (string, error) {
 		return f.StringValue(), nil
 	case TypeNumber:
 		f := TypeNumber.CreateField("", "", TypeNumber)
-		err = f.Parse(data.Value)
+		if vv, ok := data.Value.([]any); ok && len(vv) > 0 {
+			err = f.Parse(vv[0])
+		} else {
+			err = f.Parse(data.Value)
+		}
 		if err != nil {
 			return "", err
 		}
