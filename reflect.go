@@ -29,7 +29,7 @@ func (c *Connection[T]) fieldTypeFromStructField(structField reflect.StructField
 }
 
 func (c *Connection[T]) fieldNameFromStructField(structField reflect.StructField) string {
-	return c.fieldRealName(structField.Tag.Get("lark"))
+	return structField.Tag.Get("lark")
 }
 
 func (c *Connection[T]) fieldFromStructField(structField reflect.StructField) (larkfield.Field, error) {
@@ -37,7 +37,7 @@ func (c *Connection[T]) fieldFromStructField(structField reflect.StructField) (l
 	if ft == larkfield.TypeUnknown {
 		return nil, fmt.Errorf("field type of %s is not supported", structField.Type.String())
 	}
-	name := c.fieldRealName(structField.Tag.Get("lark"))
+	name := c.fieldNameFromStructField(structField)
 	return ft.CreateField("", name, ft), nil
 }
 
@@ -190,7 +190,7 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 			fieldValue.Set(reflect.ValueOf(meta))
 			continue
 		}
-		name := c.fieldRealName(structField.Tag.Get("lark"))
+		name := c.fieldNameFromStructField(structField)
 		field, ok := record.Fields[name]
 		if !ok {
 			continue

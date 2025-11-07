@@ -160,56 +160,56 @@ func (f *ModifiedTimeField) Parse(v any) error {
 	}
 }
 
-//func parseAnyTypeField(v any) (string, error) {
-//	var data struct {
-//		Type  Type `mapstructure:"type"`
-//		Value any  `mapstructure:"value"`
-//	}
-//	err := mapstructure.Decode(v, &data)
-//	if err != nil {
-//		return "", err
-//	}
-//	switch data.Type {
-//	case TypeText:
-//		f := TypeText.CreateField("", "", TypeText)
-//		err = f.Parse(data.Value)
-//		if err != nil {
-//			return "", err
-//		}
-//		return f.StringValue(), nil
-//	case TypeNumber:
-//		f := TypeNumber.CreateField("", "", TypeNumber)
-//		err = f.Parse(data.Value)
-//		if err != nil {
-//			return "", err
-//		}
-//		return f.StringValue(), nil
-//	case TypeSingleSelect:
-//		f := TypeSingleSelect.CreateField("", "", TypeSingleSelect)
-//		err = f.Parse(data.Value)
-//		if err != nil {
-//			return "", err
-//		}
-//		return f.StringValue(), nil
-//	default:
-//		return "", fmt.Errorf("unsupported type field for lookup or formula: %s", data.Type.String())
-//	}
-//}
-//
-//func (f *LookupField) Parse(v any) error {
-//	val, err := parseAnyTypeField(v)
-//	if err != nil {
-//		return fmt.Errorf("fail to parse lookup field: %w, %v", err, v)
-//	}
-//	f.value = val
-//	return nil
-//}
-//
-//func (f *FormulaField) Parse(v any) error {
-//	val, err := parseAnyTypeField(v)
-//	if err != nil {
-//		return fmt.Errorf("fail to parse formula field: %w, %v", err, v)
-//	}
-//	f.value = val
-//	return nil
-//}
+func parseAnyTypeField(v any) (string, error) {
+	var data struct {
+		Type  Type `mapstructure:"type"`
+		Value any  `mapstructure:"value"`
+	}
+	err := mapstructure.Decode(v, &data)
+	if err != nil {
+		return "", err
+	}
+	switch data.Type {
+	case TypeText:
+		f := TypeText.CreateField("", "", TypeText)
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	case TypeNumber:
+		f := TypeNumber.CreateField("", "", TypeNumber)
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	case TypeSingleSelect:
+		f := TypeSingleSelect.CreateField("", "", TypeSingleSelect)
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
+	default:
+		return "", fmt.Errorf("unsupported type field for lookup or formula: %s", data.Type.String())
+	}
+}
+
+func (f *LookupField) Parse(v any) error {
+	val, err := parseAnyTypeField(v)
+	if err != nil {
+		return fmt.Errorf("fail to parse lookup field: %w, %v", err, v)
+	}
+	f.value = val
+	return nil
+}
+
+func (f *FormulaField) Parse(v any) error {
+	val, err := parseAnyTypeField(v)
+	if err != nil {
+		return fmt.Errorf("fail to parse formula field: %w, %v", err, v)
+	}
+	f.value = val
+	return nil
+}

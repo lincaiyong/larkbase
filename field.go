@@ -16,5 +16,7 @@ type MultiSelectField = larkfield.MultiSelectField
 type DateField = larkfield.DateField
 type CheckboxField = larkfield.CheckboxField
 type UrlField = larkfield.UrlField
+type LookupField = larkfield.LookupField
+type FormulaField = larkfield.FormulaField
 type AutoNumberField = larkfield.AutoNumberField
 type ModifiedTimeField = larkfield.ModifiedTimeField

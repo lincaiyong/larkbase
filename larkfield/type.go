@@ -38,6 +38,8 @@ const TypeMultiSelect Type = 4
 const TypeDate Type = 5
 const TypeCheckbox Type = 7
 const TypeUrl Type = 15
+const TypeLookup = 19
+const TypeFormula = 20
 const TypeModifiedTime Type = 1002
 const TypeAutoNumber Type = 1005
 
@@ -57,6 +59,10 @@ func (t Type) String() string {
 		return "Checkbox"
 	case TypeUrl:
 		return "Url"
+	case TypeLookup:
+		return "Lookup"
+	case TypeFormula:
+		return "Formula"
 	case TypeModifiedTime:
 		return "ModifiedTime"
 	case TypeAutoNumber:
@@ -96,6 +102,14 @@ func (t Type) CreateField(id, name string, type_ Type) Field {
 		ret := &UrlField{}
 		ret.BaseField = NewBaseField(ret, id, name, type_)
 		return ret
+	case TypeLookup:
+		ret := &LookupField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
+	case TypeFormula:
+		ret := &FormulaField{}
+		ret.BaseField = NewBaseField(ret, id, name, type_)
+		return ret
 	case TypeModifiedTime:
 		ret := &ModifiedTimeField{}
 		ret.BaseField = NewBaseField(ret, id, name, type_)
@@ -125,6 +139,10 @@ func TypeFromString(s string) Type {
 		return TypeCheckbox
 	case "Url":
 		return TypeUrl
+	case "Lookup":
+		return TypeLookup
+	case "Formula":
+		return TypeFormula
 	case "ModifiedTime":
 		return TypeModifiedTime
 	case "AutoNumber":

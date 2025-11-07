@@ -84,9 +84,9 @@ func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connec
 	return conn, nil
 }
 
-func ConnectWithOpts[T any](ctx context.Context, appId, appSecret, tableUrl string, fieldNameMapping map[string]string) (*Connection[T], error) {
+func ConnectUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
 	structPtr := new(T)
-	conn := &Connection[T]{ctx: ctx, condition: structPtr, fieldNameMapping: fieldNameMapping}
+	conn := &Connection[T]{ctx: ctx, condition: structPtr}
 	if err := conn.checkStructPtr(structPtr, tableUrl); err != nil {
 		return nil, err
 	}
@@ -108,12 +108,8 @@ func ConnectWithOpts[T any](ctx context.Context, appId, appSecret, tableUrl stri
 	return conn, nil
 }
 
-func ConnectWithUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
-	return ConnectWithOpts[T](ctx, appId, appSecret, tableUrl, nil)
-}
-
 func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
-	return ConnectWithUrl[T](ctx, appId, appSecret, "")
+	return ConnectUrl[T](ctx, appId, appSecret, "")
 }
 
 type Connection[T any] struct {
@@ -124,25 +120,34 @@ type Connection[T any] struct {
 
 	tableUrl   string
 	appToken   string
-	structName string
 	tableId    string
 	viewId     string
+	structName string
 	fields     []larkfield.Field
 	fieldNames []string
 	fieldMap   map[string]larkfield.Field
 
-	fieldNameMapping map[string]string
-
 	isAnyRecord bool
 }
 
-func (c *Connection[T]) fieldRealName(fieldName string) string {
-	if c.fieldNameMapping != nil {
-		if ret, ok := c.fieldNameMapping[fieldName]; ok {
-			return ret
-		}
-	}
-	return fieldName
+func (c *Connection[T]) TableUrl() string {
+	return c.tableUrl
+}
+
+func (c *Connection[T]) AppToken() string {
+	return c.appToken
+}
+
+func (c *Connection[T]) TableId() string {
+	return c.tableId
+}
+
+func (c *Connection[T]) ViewId() string {
+	return c.viewId
+}
+
+func (c *Connection[T]) StructName() string {
+	return c.structName
 }
 
 var errorNotFound = errors.New("record not found")
