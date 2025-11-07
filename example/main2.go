@@ -16,15 +16,24 @@ func main() {
 		log.ErrorLog("fail to connect: %v", err)
 		return
 	}
-	var records []*larkbase.AnyRecord
-	err = conn.FindAll(&records, nil)
+	//var records []*larkbase.AnyRecord
+	//err = conn.FindAll(&records, nil)
+	//if err != nil {
+	//	log.ErrorLog("fail to find: %v", err)
+	//	return
+	//}
+	//for _, record := range records {
+	//	b, _ := json.MarshalIndent(record.Data, "", "  ")
+	//	log.InfoLog(string(b))
+	//}
+
+	var record larkbase.AnyRecord
+	err = conn.Find(&record, larkbase.NewFindOption(conn.FilterAnd(conn.Condition().Id.Is(1))))
 	if err != nil {
 		log.ErrorLog("fail to find: %v", err)
 		return
 	}
-	for _, record := range records {
-		b, _ := json.MarshalIndent(record.Data, "", "  ")
-		log.InfoLog(string(b))
-	}
+	b, _ := json.MarshalIndent(record.Data, "", "  ")
+	log.InfoLog(string(b))
 	log.InfoLog("done")
 }

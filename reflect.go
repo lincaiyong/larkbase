@@ -82,6 +82,9 @@ func (c *Connection[T]) fillStructPtr(structPtr *T) error {
 		field.SetSelf(field)
 		field.SetName(c.fieldNameFromStructField(structField))
 		field.SetType(c.fieldTypeFromStructField(structField))
+		if c.isAnyRecord {
+			break
+		}
 	}
 	return nil
 }
@@ -174,7 +177,7 @@ func (c *Connection[T]) convertRecordToStructPtr(record *Record, structPtr *T) e
 	if c.isAnyRecord {
 		metaField := structValue.Field(0)
 		metaField.Set(reflect.ValueOf(meta))
-		dataField := structValue.Field(1)
+		dataField := structValue.Field(2)
 		data := make(map[string]string)
 		for k, f := range record.Fields {
 			data[k] = f.StringValue()

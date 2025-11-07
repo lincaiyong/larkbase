@@ -63,8 +63,12 @@ func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connec
 		ctx:         ctx,
 		tableUrl:    tableUrl,
 		isAnyRecord: true,
+		condition:   &AnyRecord{},
 	}
-	var err error
+	err := conn.fillStructPtr(conn.condition)
+	if err != nil {
+		return nil, err
+	}
 	conn.appToken, conn.tableId, conn.viewId = extractAppTokenTableIdViewIdFromUrl(tableUrl)
 	if conn.appToken == "" || conn.tableId == "" {
 		return nil, fmt.Errorf("invalid table url: %s", tableUrl)
@@ -80,6 +84,7 @@ func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connec
 	conn.fieldMap = make(map[string]larkfield.Field)
 	for _, field := range fields {
 		conn.fieldMap[field.Name()] = field
+		conn.fieldNames = append(conn.fieldNames, field.Name())
 	}
 	return conn, nil
 }

@@ -27,5 +27,6 @@ func (r *Record) buildForLarkSuite() (map[string]any, error) {
 
 type AnyRecord struct {
 	Meta
+	Id   NumberField `lark:"id"`
 	Data map[string]string
 }
