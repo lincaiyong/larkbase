@@ -133,6 +133,8 @@ type Connection[T any] struct {
 	fieldMap   map[string]larkfield.Field
 
 	isAnyRecord bool
+
+	batchSize int
 }
 
 func (c *Connection[T]) TableUrl() string {
@@ -229,6 +231,10 @@ func (c *Connection[T]) Update(structPtr *T) error {
 	return c.updateRecord(record)
 }
 
+func (c *Connection[T]) SetBatchSize(batchSize int) {
+	c.batchSize = batchSize
+}
+
 func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
 	if err := c.fillStructPtrSlice(structPtrSlice); err != nil {
 		return err
@@ -237,7 +243,22 @@ func (c *Connection[T]) UpdateAll(structPtrSlice []*T) error {
 	if err != nil {
 		return err
 	}
-	return c.updateRecords(records)
+	if c.batchSize == 0 {
+		return c.updateRecords(records)
+	} else {
+		for i := 0; i < len(records); i += c.batchSize {
+			end := i + c.batchSize
+			if end > len(records) {
+				end = len(records)
+			}
+			batchRecords := records[i:end]
+			err = c.updateRecords(batchRecords)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func (c *Connection[T]) Create(structPtr *T) error {
@@ -266,9 +287,26 @@ func (c *Connection[T]) CreateAll(structPtrSlice []*T) ([]*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	records, err = c.createRecords(records)
-	if err != nil {
-		return nil, err
+	if c.batchSize == 0 {
+		records, err = c.createRecords(records)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		resultRecords := make([]*Record, 0, len(records))
+		for i := 0; i < len(records); i += c.batchSize {
+			end := i + c.batchSize
+			if end > len(records) {
+				end = len(records)
+			}
+			batchRecords := records[i:end]
+			batchRecords, err = c.createRecords(batchRecords)
+			if err != nil {
+				return nil, err
+			}
+			resultRecords = append(resultRecords, batchRecords...)
+		}
+		records = resultRecords
 	}
 	err = c.convertRecordsToStructPtrSlicePtr(records, &structPtrSlice)
 	if err != nil {
