@@ -11,7 +11,7 @@ import (
 )
 
 func extractAppTokenTableIdViewIdFromUrl(url string) (string, string, string) {
-	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/base/(\w+)\?table=(\w+)(?:&view=(\w+))?`)
+	re := regexp.MustCompile(`^https://bytedance\.larkoffice\.com/(?:base|wiki)/(\w+)\?table=(\w+)(?:&view=(\w+))?`)
 	match := re.FindStringSubmatch(url)
 	if len(match) != 4 {
 		return "", "", ""
