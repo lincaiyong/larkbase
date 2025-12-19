@@ -34,6 +34,7 @@ func main() {
 		return
 	}
 	record.Update("output", "test output")
+	record.Update("no", "test output")
 	err = conn.Update(&record)
 	if err != nil {
 		log.ErrorLog("fail to update: %v", err)
