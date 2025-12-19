@@ -7,9 +7,6 @@ type TextField struct {
 }
 
 func (f *TextField) SetValue(v string) {
-	//if f.BaseField == nil {
-	//	f.BaseField = NewBaseField(f, "", "", TypeText)
-	//}
 	if len(v) > 80000 {
 		log.WarnLog("text field set value too large(%d), truncated", len(v))
 		v = v[:80000]

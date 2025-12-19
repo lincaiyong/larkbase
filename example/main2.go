@@ -33,6 +33,12 @@ func main() {
 		log.ErrorLog("fail to find: %v", err)
 		return
 	}
+	record.Update("output", "test output")
+	err = conn.Update(&record)
+	if err != nil {
+		log.ErrorLog("fail to update: %v", err)
+		return
+	}
 	b, _ := json.MarshalIndent(record.Data, "", "  ")
 	log.InfoLog(string(b))
 	log.InfoLog("done")

@@ -27,6 +27,14 @@ func (r *Record) buildForLarkSuite() (map[string]any, error) {
 
 type AnyRecord struct {
 	Meta
-	Id   NumberField `lark:"id"`
-	Data map[string]string
+	Id     NumberField `lark:"id"`
+	Data   map[string]string
+	update map[string]string
+}
+
+func (r *AnyRecord) Update(k, v string) {
+	if r.update == nil {
+		r.update = make(map[string]string)
+	}
+	r.update[k] = v
 }

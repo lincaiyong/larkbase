@@ -151,8 +151,22 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 			record.ModifiedTime = meta.ModifiedTime
 			continue
 		}
+		if c.isAnyRecord {
+			break
+		}
 		field := fieldValue.Addr().Interface().(larkfield.Field)
 		record.Fields[field.Name()] = field
+	}
+	if c.isAnyRecord {
+		if anyRecord, ok := any(structPtr).(*AnyRecord); ok {
+			if anyRecord.update != nil {
+				for k, v := range anyRecord.update {
+					f := new(TextField)
+					f.SetValue(v)
+					record.Fields[k] = f
+				}
+			}
+		}
 	}
 	return
 }
