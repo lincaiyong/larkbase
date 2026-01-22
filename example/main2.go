@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"github.com/lincaiyong/larkbase"
 	"github.com/lincaiyong/log"
-	"os"
 )
 
 func main() {
-	appId, appSecret := os.Getenv("LARK_APP_ID"), os.Getenv("LARK_APP_SECRET")
 	tableUrl := "https://bytedance.larkoffice.com/base/RB31bsA7Pa3f5JsKDlhcoTYdnue?table=tblRyfYXwEhFVX9y"
-	conn, err := larkbase.ConnectAny(context.Background(), appId, appSecret, tableUrl)
+	conn, err := larkbase.ConnectAny(context.Background(), tableUrl)
 	if err != nil {
 		log.ErrorLog("fail to connect: %v", err)
 		return

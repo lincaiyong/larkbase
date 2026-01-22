@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
+	"os"
 	"strings"
 	"unicode"
 )
@@ -58,7 +59,19 @@ func toCamelCase(s string) string {
 	return sb.String()
 }
 
-func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connection[AnyRecord], error) {
+var appId, appSecret string
+
+func init() {
+	appId = os.Getenv("LARK_APP_ID")
+	appSecret = os.Getenv("LARK_APP_SECRET")
+}
+
+func SetAppIdSecret(appId_, appSecret_ string) {
+	appId = appId_
+	appSecret = appSecret_
+}
+
+func ConnectAny(ctx context.Context, tableUrl string) (*Connection[AnyRecord], error) {
 	conn := &Connection[AnyRecord]{
 		ctx:         ctx,
 		tableUrl:    tableUrl,
@@ -89,7 +102,7 @@ func ConnectAny(ctx context.Context, appId, appSecret, tableUrl string) (*Connec
 	return conn, nil
 }
 
-func ConnectUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (*Connection[T], error) {
+func ConnectUrl[T any](ctx context.Context, tableUrl string) (*Connection[T], error) {
 	structPtr := new(T)
 	conn := &Connection[T]{ctx: ctx, condition: structPtr}
 	if err := conn.checkStructPtr(structPtr, tableUrl); err != nil {
@@ -113,8 +126,8 @@ func ConnectUrl[T any](ctx context.Context, appId, appSecret, tableUrl string) (
 	return conn, nil
 }
 
-func Connect[T any](ctx context.Context, appId, appSecret string) (*Connection[T], error) {
-	return ConnectUrl[T](ctx, appId, appSecret, "")
+func Connect[T any](ctx context.Context) (*Connection[T], error) {
+	return ConnectUrl[T](ctx, "")
 }
 
 type Connection[T any] struct {

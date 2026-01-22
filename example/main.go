@@ -29,11 +29,6 @@ type DemoRecord struct {
 	ModifiedTime larkbase.ModifiedTimeField `lark:"modified_time"`
 }
 
-var (
-	larkAppId     = os.Getenv("LARK_APP_ID")
-	larkAppSecret = os.Getenv("LARK_APP_SECRET")
-)
-
 func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	records := make([]*DemoRecord, 0)
 	for i := 0; i < 10; i++ {
@@ -82,7 +77,7 @@ func main() {
 	//fmt.Println(larkfield.TimeToModifiedTime(time.Now()))
 	//fmt.Println(larkfield.ModifiedTimeToTime(2509091209).Format(time.DateTime))
 
-	conn, err := larkbase.Connect[DemoRecord](context.Background(), larkAppId, larkAppSecret)
+	conn, err := larkbase.Connect[DemoRecord](context.Background())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
