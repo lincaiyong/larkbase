@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
+	"github.com/lincaiyong/larkbase/tos"
 	"os"
 	"strings"
 	"unicode"
@@ -148,6 +149,26 @@ type Connection[T any] struct {
 	isAnyRecord bool
 
 	batchSize int
+}
+
+func (c *Connection[T]) SetTosValue(f *larkfield.TextField, b []byte) error {
+	key, err := tos.Put(c.ctx, b)
+	if err != nil {
+		return err
+	}
+	f.SetValue(key)
+	return nil
+}
+
+func (c *Connection[T]) GetTosValue(f *larkfield.TextField) ([]byte, error) {
+	hash := f.StringValue()
+	if hash == "" {
+		return nil, nil
+	}
+	if len(hash) != 32 {
+		return nil, fmt.Errorf("invalid md5: %s", hash)
+	}
+	return tos.Get(c.ctx, hash)
 }
 
 func (c *Connection[T]) TableUrl() string {
