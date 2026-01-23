@@ -16,7 +16,7 @@ import (
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/record-filter-guide
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 
-func DescribeTable(ctx context.Context, appId, appSecret, url string) (string, error) {
+func DescribeTable(ctx context.Context, url string) (string, error) {
 	appToken, tableId, _ := extractAppTokenTableIdViewIdFromUrl(url)
 	if appToken == "" || tableId == "" {
 		return "", fmt.Errorf("invalid table url: %s", url)
