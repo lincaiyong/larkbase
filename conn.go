@@ -8,6 +8,7 @@ import (
 	lark "github.com/lincaiyong/larkbase/larksuite"
 	"os"
 	"strings"
+	"sync"
 	"unicode"
 )
 
@@ -148,6 +149,16 @@ type Connection[T any] struct {
 	isAnyRecord bool
 
 	batchSize int
+
+	mu sync.Mutex
+}
+
+func (c *Connection[T]) Lock() {
+	c.mu.Lock()
+}
+
+func (c *Connection[T]) Unlock() {
+	c.mu.Unlock()
 }
 
 func (c *Connection[T]) SetTosValue(f *larkfield.TextField, b []byte) error {
