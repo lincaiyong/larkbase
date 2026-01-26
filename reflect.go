@@ -162,7 +162,7 @@ func (c *Connection[T]) convertStructPtrToRecord(structPtr *T) (record *Record, 
 		if anyRecord, ok := any(structPtr).(*AnyRecord); ok {
 			if anyRecord.update != nil {
 				for k, v := range anyRecord.update {
-					if c.fieldMap[k].Type() != larkfield.TypeText {
+					if c.fieldMap[k] == nil || c.fieldMap[k].Type() != larkfield.TypeText {
 						log.WarnLog("update field %s is not supported: %s", k, c.fieldMap[k].Type().String())
 						continue
 					}
