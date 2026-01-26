@@ -33,7 +33,7 @@ func DescribeTable(ctx context.Context, url string) (string, error) {
 	sb.WriteString(fmt.Sprintf("    larkbase.Meta `lark:\"%s\"`\n\n", url))
 	for _, field := range fields {
 		switch field.TypeStr() {
-		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Url", "AutoNumber", "ModifiedTime":
+		case "Text", "Number", "SingleSelect", "MultiSelect", "Date", "Checkbox", "Url", "AutoNumber", "ModifiedTime", "Lookup", "Formula":
 			sb.WriteString(fmt.Sprintf("    %s larkbase.%sField `lark:\"%s\"`\n", toCamelCase(field.Name()), field.Type(), field.Name()))
 		}
 	}
