@@ -1,10 +1,16 @@
 package larkfield
 
+import "github.com/lincaiyong/log"
+
 type TextField struct {
 	BaseField
 }
 
 func (f *TextField) SetValue(v string) {
+	if len(v) > 80000 {
+		log.WarnLog("set value too long: %d, truncate it", len(v))
+		v = v[:80000]
+	}
 	f.SetUnderlayValue(v)
 }
 
