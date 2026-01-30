@@ -37,4 +37,5 @@ func (r *AnyRecord) Update(k, v string) {
 		r.update = make(map[string]string)
 	}
 	r.update[k] = v
+	r.Data[k] = v
 }
