@@ -207,7 +207,7 @@ func main2() {
 	}
 }
 
-func main() {
+func main3() {
 	conn, err := larkbase.Connect[DemoRecord](context.Background())
 	if err != nil {
 		log.ErrorLog("fail to connect: %v", err)
@@ -255,6 +255,20 @@ func main() {
 	err = conn.Update(&record)
 	if err != nil {
 		log.ErrorLog("fail to update: %v", err)
+		return
+	}
+	log.InfoLog("done")
+}
+
+func main() {
+	url := "https://bytedance.larkoffice.com/base/OPd3bf8heaPa9SsB87KcRrpFnpd?table=tbl7IzhyFiQ3ZKv1&view=vewyeFGLBW"
+	err := larkbase.CreateAll(context.Background(), url, []map[string]string{
+		{
+			"k": "v",
+		},
+	}, "")
+	if err != nil {
+		log.ErrorLog("fail to CreateAll: %v", err)
 		return
 	}
 	log.InfoLog("done")

@@ -319,6 +319,41 @@ func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 	return ret, nil
 }
 
+// https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/batch_create
+func (c *Connection[T]) createRecordsAny(records []*AnyRecord) error {
+	reqRecords := make([]*bitable.AppTableRecord, 0, len(records))
+	for _, record := range records {
+		fields := make(map[string]any)
+		for k, v := range record.Data {
+			fields[k] = v
+		}
+		reqRecords = append(reqRecords, bitable.NewAppTableRecordBuilder().
+			Fields(fields).
+			Build())
+	}
+	if len(reqRecords) == 0 {
+		return fmt.Errorf("fail to create records: empty records")
+	}
+	req := bitable.NewBatchCreateAppTableRecordReqBuilder().
+		AppToken(c.appToken).
+		TableId(c.tableId).
+		Body(bitable.NewBatchCreateAppTableRecordReqBodyBuilder().Records(reqRecords).Build()).
+		Build()
+	var resp *bitable.BatchCreateAppTableRecordResp
+	var err error
+	c.retry(func() error {
+		resp, err = c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
+		return err
+	})
+	if err != nil {
+		return fmt.Errorf("fail to call bitable create record: %v", err)
+	}
+	if !resp.Success() {
+		return fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+	}
+	return nil
+}
+
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/delete
 func (c *Connection[T]) deleteRecord(record *Record) error {
 	if record.Id == "" {

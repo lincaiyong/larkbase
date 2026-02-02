@@ -7,6 +7,7 @@ import (
 	"github.com/lincaiyong/larkbase/larkfield"
 	lark "github.com/lincaiyong/larkbase/larksuite"
 	"os"
+	"sort"
 	"strings"
 	"unicode"
 )
@@ -350,6 +351,36 @@ func (c *Connection[T]) CreateAll(structPtrSlice []*T) ([]*T, error) {
 		return nil, err
 	}
 	return structPtrSlice, nil
+}
+
+func (c *Connection[T]) CreateAllAny(fields []string, records []*AnyRecord) ([]*T, error) {
+	var err error
+	sort.Strings(fields)
+	for _, field := range fields {
+		err = c.createField(field, larkfield.TypeText)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if c.batchSize == 0 {
+		err = c.createRecordsAny(records)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		for i := 0; i < len(records); i += c.batchSize {
+			end := i + c.batchSize
+			if end > len(records) {
+				end = len(records)
+			}
+			batchRecords := records[i:end]
+			err = c.createRecordsAny(batchRecords)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return nil, nil
 }
 
 func (c *Connection[T]) Delete(structPtr *T) error {
