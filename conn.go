@@ -362,22 +362,16 @@ func (c *Connection[T]) CreateAllAny(fields []string, records []*AnyRecord) ([]*
 			return nil, err
 		}
 	}
-	if c.batchSize == 0 {
-		err = c.createRecordsAny(records)
+	c.batchSize = 50
+	for i := 0; i < len(records); i += c.batchSize {
+		end := i + c.batchSize
+		if end > len(records) {
+			end = len(records)
+		}
+		batchRecords := records[i:end]
+		err = c.createRecordsAny(batchRecords)
 		if err != nil {
 			return nil, err
-		}
-	} else {
-		for i := 0; i < len(records); i += c.batchSize {
-			end := i + c.batchSize
-			if end > len(records) {
-				end = len(records)
-			}
-			batchRecords := records[i:end]
-			err = c.createRecordsAny(batchRecords)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	return nil, nil
