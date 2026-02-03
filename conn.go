@@ -354,9 +354,15 @@ func (c *Connection[T]) CreateAll(structPtrSlice []*T) ([]*T, error) {
 }
 
 func (c *Connection[T]) CreateAllAny(fields []string, records []*AnyRecord) ([]*T, error) {
-	var err error
 	sort.Strings(fields)
+	existsFields, err := c.listFields()
+	if err != nil {
+		return nil, err
+	}
 	for _, field := range fields {
+		if _, ok := existsFields[field]; ok {
+			continue
+		}
 		err = c.createField(field, larkfield.TypeText)
 		if err != nil {
 			return nil, err
