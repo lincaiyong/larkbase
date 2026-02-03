@@ -155,26 +155,6 @@ func (c *Connection[T]) Context() context.Context {
 	return c.ctx
 }
 
-func (c *Connection[T]) SetTosValue(f *larkfield.TextField, b []byte) error {
-	key, err := tosPutFn(c.ctx, b)
-	if err != nil {
-		return err
-	}
-	f.SetValue(key)
-	return nil
-}
-
-func (c *Connection[T]) GetTosValue(f *larkfield.TextField) ([]byte, error) {
-	hash := f.StringValue()
-	if hash == "" {
-		return nil, nil
-	}
-	if len(hash) != 32 {
-		return nil, fmt.Errorf("invalid md5: %s", hash)
-	}
-	return tosGetFn(c.ctx, hash)
-}
-
 func (c *Connection[T]) TableUrl() string {
 	return c.tableUrl
 }
