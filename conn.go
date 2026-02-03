@@ -368,7 +368,7 @@ func (c *Connection[T]) CreateAllAny(fields []string, records []*AnyRecord) ([]*
 			return nil, err
 		}
 	}
-	c.batchSize = 50
+	c.batchSize = 100
 	for i := 0; i < len(records); i += c.batchSize {
 		end := i + c.batchSize
 		if end > len(records) {
