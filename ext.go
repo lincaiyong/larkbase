@@ -7,6 +7,7 @@ import (
 	lark "github.com/lincaiyong/larkbase/larksuite"
 	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
+	"strings"
 )
 
 //	func CreateTable(ctx context.Context, name string) error {
@@ -51,6 +52,12 @@ func CreateTable(ctx context.Context, name string, fields []string) (string, err
 }
 
 func CreateAll(ctx context.Context, url string, data []map[string]string, tosFields string) error {
+	tosFieldMap := make(map[string]struct{})
+	if tosFields != "" {
+		for _, field := range strings.Split(tosFields, ",") {
+			tosFieldMap[field] = struct{}{}
+		}
+	}
 	conn, err := ConnectAny(ctx, url)
 	if err != nil {
 		return err
@@ -61,11 +68,18 @@ func CreateAll(ctx context.Context, url string, data []map[string]string, tosFie
 		var r AnyRecord
 		r.Data = make(map[string]string)
 		for k, v := range row {
-			if i == 0 {
-				fields = append(fields, k)
+			if _, ok := tosFieldMap[k]; ok {
+				v, err = tosPutFn(ctx, []byte(v))
+				if err != nil {
+					return err
+				}
+				k = fmt.Sprintf("tos_%s", k)
 			}
 			r.Data[k] = v
 			r.Update(k, v)
+			if i == 0 {
+				fields = append(fields, k)
+			}
 		}
 		records = append(records, &r)
 	}
