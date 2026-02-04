@@ -67,6 +67,7 @@ func CreateAll(ctx context.Context, url string, data []map[string]string, objPut
 					return err
 				}
 			}
+
 			r.Data[k] = v
 			r.Update(k, v)
 			if i == 0 {

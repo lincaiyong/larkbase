@@ -2,6 +2,7 @@ package larkfield
 
 import (
 	"fmt"
+	"github.com/lincaiyong/log"
 	"github.com/mitchellh/mapstructure"
 	"strconv"
 	"strings"
@@ -203,7 +204,7 @@ func parseAnyTypeField(v any) (string, error) {
 func (f *LookupField) Parse(v any) error {
 	val, err := parseAnyTypeField(v)
 	if err != nil {
-		return fmt.Errorf("fail to parse lookup field: %w, %v", err, v)
+		log.WarnLog("fail to parse lookup field (ignored): %w, %v", err, v)
 	}
 	f.value = val
 	return nil
@@ -212,7 +213,7 @@ func (f *LookupField) Parse(v any) error {
 func (f *FormulaField) Parse(v any) error {
 	val, err := parseAnyTypeField(v)
 	if err != nil {
-		return fmt.Errorf("fail to parse formula field: %w, %v", err, v)
+		log.WarnLog("fail to parse formula field (ignored): %w, %v", err, v)
 	}
 	f.value = val
 	return nil
