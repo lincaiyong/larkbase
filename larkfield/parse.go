@@ -196,6 +196,13 @@ func parseAnyTypeField(v any) (string, error) {
 			return "", err
 		}
 		return f.StringValue(), nil
+	case TypeAutoNumber:
+		f := TypeAutoNumber.CreateField("", "", TypeAutoNumber)
+		err = f.Parse(data.Value)
+		if err != nil {
+			return "", err
+		}
+		return f.StringValue(), nil
 	default:
 		return "", fmt.Errorf("unsupported type field for lookup or formula: %s", data.Type.String())
 	}
