@@ -77,7 +77,7 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	}
 }
 
-func main2() {
+func main() {
 	//fmt.Println(larkfield.TimeToModifiedTime(time.Now()))
 	//fmt.Println(larkfield.ModifiedTimeToTime(2509091209).Format(time.DateTime))
 
@@ -127,11 +127,11 @@ func main2() {
 	//}
 	//fmt.Println(record)
 	//
-	//err = conn.CreateView("empty", conn.ViewFilterAnd(conn.Condition().Name.IsNotEmpty()))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
+	err = conn.CreateView("empty", conn.ViewFilterAnd(conn.Condition().Name.IsNotEmpty()))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	//
 	//return
 	//
@@ -207,7 +207,7 @@ func main2() {
 	}
 }
 
-func main() {
+func main1() {
 	url := "https://bytedance.larkoffice.com/base/OPd3bf8heaPa9SsB87KcRrpFnpd?table=tbl7IzhyFiQ3ZKv1&view=vewyeFGLBW"
 	err := larkbase.CreateAll(context.Background(), url, []map[string]string{
 		{

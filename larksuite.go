@@ -9,6 +9,7 @@ import (
 	"github.com/lincaiyong/larkbase/larksuite/bitable"
 	larkcore "github.com/lincaiyong/larkbase/larksuite/core"
 	"github.com/lincaiyong/log"
+	"reflect"
 )
 
 func queryAllPages(f func(pageToken string) (newPageToken string, err error)) error {
@@ -34,6 +35,7 @@ func (c *Connection[T]) checkFields() error {
 	if err != nil {
 		return err
 	}
+
 	for name, structField := range c.fieldMap {
 		f, ok := fields[name]
 		if !ok {
@@ -44,6 +46,23 @@ func (c *Connection[T]) checkFields() error {
 		}
 		structField.SetId(f.Id())
 	}
+
+	// 遍历condition的字段，设置id
+	if !c.isAnyRecord {
+		structValue := reflect.ValueOf(c.condition).Elem()
+		for i := 1; i < structValue.NumField(); i++ {
+			fieldValue := structValue.Field(i)
+			if !fieldValue.CanAddr() || !fieldValue.Addr().CanInterface() {
+				continue
+			}
+			conditionField := fieldValue.Addr().Interface().(larkfield.Field)
+			name := conditionField.Name()
+			if f, ok := fields[name]; ok {
+				conditionField.SetId(f.Id())
+			}
+		}
+	}
+
 	return nil
 }
 
