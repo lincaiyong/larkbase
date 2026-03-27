@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lincaiyong/larkbase"
-	"github.com/lincaiyong/log"
 	"os"
 	"time"
 )
@@ -77,7 +76,7 @@ func testBatch(conn *larkbase.Connection[DemoRecord]) {
 	}
 }
 
-func main() {
+func main1() {
 	//fmt.Println(larkfield.TimeToModifiedTime(time.Now()))
 	//fmt.Println(larkfield.ModifiedTimeToTime(2509091209).Format(time.DateTime))
 
@@ -207,16 +206,8 @@ func main() {
 	}
 }
 
-func main1() {
-	url := "https://bytedance.larkoffice.com/base/OPd3bf8heaPa9SsB87KcRrpFnpd?table=tbl7IzhyFiQ3ZKv1&view=vewyeFGLBW"
-	err := larkbase.CreateAll(context.Background(), url, []map[string]string{
-		{
-			"k": "v",
-		},
-	}, nil)
-	if err != nil {
-		log.ErrorLog("fail to CreateAll: %v", err)
-		return
-	}
-	log.InfoLog("done")
+func main() {
+	conn, _ := larkbase.Connect[DemoRecord](context.Background())
+	c, _ := conn.Count(nil)
+	fmt.Println(c)
 }

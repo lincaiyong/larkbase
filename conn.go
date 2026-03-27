@@ -208,6 +208,17 @@ func (c *Connection[T]) Find(structPtr *T, opt *FindOption) error {
 	return nil
 }
 
+func (c *Connection[T]) Count(opt *FindOption) (int, error) {
+	if opt == nil {
+		opt = &FindOption{}
+	}
+	_, _, total, err := c.queryRecordsByPageWithTotal(opt.viewId, opt.filter, opt.sorts, "", 1, nil)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func (c *Connection[T]) FindAll(structPtrSlicePtr *[]*T, opt *FindOption) error {
 	if structPtrSlicePtr == nil {
 		return errors.New("structSlicePtr is nil")

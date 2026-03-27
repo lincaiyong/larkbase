@@ -102,6 +102,11 @@ func (c *Connection[T]) parseAppTableRecords(items []*bitable.AppTableRecord) ([
 
 // https://open.larkoffice.com/document/docs/bitable-v1/app-table-record/search
 func (c *Connection[T]) queryRecordsByPage(viewId string, filter *bitable.FilterInfo, sorts []*bitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, error) {
+	result, nextPageToken, _, err := c.queryRecordsByPageWithTotal(viewId, filter, sorts, pageToken, pageSize, records)
+	return result, nextPageToken, err
+}
+
+func (c *Connection[T]) queryRecordsByPageWithTotal(viewId string, filter *bitable.FilterInfo, sorts []*bitable.Sort, pageToken string, pageSize int, records []*Record) ([]*Record, string, int, error) {
 	if pageSize == 0 {
 		pageSize = 100
 	}
@@ -126,28 +131,32 @@ func (c *Connection[T]) queryRecordsByPage(viewId string, filter *bitable.Filter
 	req := reqBuilder.Build()
 	var resp *bitable.SearchAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.Search(c.ctx, req)
 		return err
 	})
 	if err != nil {
-		return nil, "", fmt.Errorf("fail to call bitable search table: %v", err)
+		return nil, "", 0, fmt.Errorf("fail to call bitable search table: %v", err)
 	}
 	if !resp.Success() {
-		return nil, "", fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
+		return nil, "", 0, fmt.Errorf("get response with error: %s", larkcore.Prettify(resp.CodeError))
 	}
 	var newRecords []*Record
 	newRecords, err = c.parseAppTableRecords(resp.Data.Items)
 	if err != nil {
-		return nil, "", err
+		return nil, "", 0, err
 	}
 	for _, record := range newRecords {
 		records = append(records, record)
 	}
-	if *resp.Data.HasMore {
-		return records, *resp.Data.PageToken, nil
+	total := 0
+	if resp.Data.Total != nil {
+		total = *resp.Data.Total
 	}
-	return records, "", nil
+	if *resp.Data.HasMore {
+		return records, *resp.Data.PageToken, total, nil
+	}
+	return records, "", total, nil
 }
 
 // https://open.larkoffice.com/document/server-docs/docs/bitable-v1/app-table-record/update
@@ -172,7 +181,7 @@ func (c *Connection[T]) updateRecord(record *Record) error {
 		Build()
 
 	var resp *bitable.UpdateAppTableRecordResp
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.Update(c.ctx, req)
 		return err
 	})
@@ -212,7 +221,7 @@ func (c *Connection[T]) updateRecords(records []*Record) error {
 			Build()).Build()
 	var resp *bitable.BatchUpdateAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.BatchUpdate(c.ctx, req)
 		return err
 	})
@@ -277,7 +286,7 @@ func (c *Connection[T]) createRecord(record *Record) (*Record, error) {
 			Build()).
 		Build()
 	var resp *bitable.CreateAppTableRecordResp
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.Create(c.ctx, req)
 		return err
 	})
@@ -320,7 +329,7 @@ func (c *Connection[T]) createRecords(records []*Record) ([]*Record, error) {
 		Build()
 	var resp *bitable.BatchCreateAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
 		return err
 	})
@@ -360,7 +369,7 @@ func (c *Connection[T]) createRecordsAny(records []*AnyRecord) error {
 		Build()
 	var resp *bitable.BatchCreateAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.BatchCreate(c.ctx, req)
 		return err
 	})
@@ -384,7 +393,7 @@ func (c *Connection[T]) deleteRecord(record *Record) error {
 	req := builder.Build()
 	var resp *bitable.DeleteAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.Delete(c.ctx, req)
 		return err
 	})
@@ -416,7 +425,7 @@ func (c *Connection[T]) deleteRecords(records []*Record) error {
 			Build()).Build()
 	var resp *bitable.BatchDeleteAppTableRecordResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableRecord.BatchDelete(c.ctx, req)
 		return err
 	})
@@ -441,7 +450,7 @@ func (c *Connection[T]) createView(name string) (string, error) {
 		Build()
 	var resp *bitable.CreateAppTableViewResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableView.Create(c.ctx, req)
 		return err
 	})
@@ -470,7 +479,7 @@ func (c *Connection[T]) updateView(viewId, viewName string, filter *ViewFilter) 
 		Build()
 	var resp *bitable.PatchAppTableViewResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableView.Patch(c.ctx, req)
 		return err
 	})
@@ -492,7 +501,7 @@ func (c *Connection[T]) listFields() (map[string]larkfield.Type, error) {
 		Build()
 	var resp *bitable.ListAppTableFieldResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableField.List(c.ctx, req)
 		return err
 	})
@@ -524,7 +533,7 @@ func (c *Connection[T]) createField(name string, type_ larkfield.Type) error {
 		Build()
 	var resp *bitable.CreateAppTableFieldResp
 	var err error
-	c.retry(func() error {
+	err = c.retry(func() error {
 		resp, err = c.client.Bitable.V1.AppTableField.Create(c.ctx, req)
 		return err
 	})
@@ -537,10 +546,12 @@ func (c *Connection[T]) createField(name string, type_ larkfield.Type) error {
 	return nil
 }
 
-func (c *Connection[T]) retry(f func() error) {
+func (c *Connection[T]) retry(f func() error) error {
+	var err error
 	for i := 0; i < 3; i++ {
-		if err := f(); err == nil {
-			break
+		if err = f(); err == nil {
+			return nil
 		}
 	}
+	return err
 }
