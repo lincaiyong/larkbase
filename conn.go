@@ -151,6 +151,18 @@ type Connection[T any] struct {
 	batchSize int
 }
 
+func (c *Connection[T]) Fields() []larkfield.Field {
+	return c.fields
+}
+
+func (c *Connection[T]) FieldNames() []string {
+	return c.fieldNames
+}
+
+func (c *Connection[T]) FieldMap() map[string]larkfield.Field {
+	return c.fieldMap
+}
+
 func (c *Connection[T]) Context() context.Context {
 	return c.ctx
 }
