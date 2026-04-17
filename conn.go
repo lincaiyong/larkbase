@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"unicode"
 )
 
@@ -21,6 +22,7 @@ func DescribeTable(ctx context.Context, url string) (string, error) {
 	if appToken == "" || tableId == "" {
 		return "", fmt.Errorf("invalid table url: %s", url)
 	}
+	appId, appSecret := getAppIdSecret()
 	client := lark.NewClient(appId, appSecret)
 	fields := make(map[string]larkfield.Field)
 	err := queryAllPages(func(pageToken string) (newPageToken string, err error) {
@@ -60,7 +62,10 @@ func toCamelCase(s string) string {
 	return sb.String()
 }
 
-var appId, appSecret string
+var (
+	appId, appSecret string
+	appIdSecretMu    sync.RWMutex
+)
 
 func init() {
 	appId = os.Getenv("LARK_APP_ID")
@@ -68,8 +73,16 @@ func init() {
 }
 
 func SetAppIdSecret(appId_, appSecret_ string) {
+	appIdSecretMu.Lock()
+	defer appIdSecretMu.Unlock()
 	appId = appId_
 	appSecret = appSecret_
+}
+
+func getAppIdSecret() (string, string) {
+	appIdSecretMu.RLock()
+	defer appIdSecretMu.RUnlock()
+	return appId, appSecret
 }
 
 func ConnectAny(ctx context.Context, tableUrl string) (*Connection[AnyRecord], error) {
@@ -87,6 +100,7 @@ func ConnectAny(ctx context.Context, tableUrl string) (*Connection[AnyRecord], e
 	if conn.appToken == "" || conn.tableId == "" {
 		return nil, fmt.Errorf("invalid table url: %s", tableUrl)
 	}
+	appId, appSecret := getAppIdSecret()
 	conn.client = lark.NewClient(appId, appSecret)
 	fields := make(map[string]larkfield.Field)
 	err = queryAllPages(func(pageToken string) (newPageToken string, err error) {
@@ -114,6 +128,7 @@ func ConnectUrl[T any](ctx context.Context, tableUrl string) (*Connection[T], er
 	if err != nil {
 		return nil, err
 	}
+	appId, appSecret := getAppIdSecret()
 	conn.client = lark.NewClient(appId, appSecret)
 	conn.fieldMap = make(map[string]larkfield.Field)
 	for _, structField := range conn.fields {
